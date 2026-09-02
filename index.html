@@ -2,130 +2,202 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="Daily — современный онлайн-ежедневник">
-    <meta name="theme-color" content="#f6f7fb">
 
-    <title>Daily — твой ежедневник</title>
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
 
-    <link rel="stylesheet" href="style.css">
+    <meta
+        name="theme-color"
+        content="#f4f5f9"
+    >
+
+    <title>Daily</title>
+
+    <link
+        rel="preconnect"
+        href="https://fonts.googleapis.com"
+    >
+
+    <link
+        rel="preconnect"
+        href="https://fonts.gstatic.com"
+        crossorigin
+    >
+
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;750;800&display=swap"
+        rel="stylesheet"
+    >
+
+    <link
+        rel="stylesheet"
+        href="style.css"
+    >
 </head>
 
 <body>
 
-<!-- =========================================================
+<!-- =====================================================
      LOADING
-========================================================= -->
+===================================================== -->
 
-<div id="loadingScreen" class="loading-screen">
-    <div class="loading-logo">D</div>
-    <div class="loading-spinner"></div>
-    <p>Загружаем Daily...</p>
+<div id="loadingScreen">
+
+    <div class="loading-content">
+
+        <div class="loading-logo">
+            D
+        </div>
+
+        <div class="loading-spinner"></div>
+
+    </div>
+
 </div>
 
 
-<!-- =========================================================
-     AUTH SCREEN
-========================================================= -->
+<!-- =====================================================
+     AUTH
+===================================================== -->
 
-<section id="authScreen" class="auth-screen hidden">
+<section
+    id="authScreen"
+    class="auth-screen hidden"
+>
 
-    <div class="auth-background">
-        <div class="auth-orb auth-orb-one"></div>
-        <div class="auth-orb auth-orb-two"></div>
-    </div>
+    <div class="auth-orb"></div>
+    <div class="auth-orb"></div>
 
     <div class="auth-card">
 
         <div class="auth-brand">
-            <div class="auth-logo">D</div>
 
-            <div>
-                <div class="auth-brand-name">Daily</div>
-                <div class="auth-brand-subtitle">Твой ежедневник</div>
+            <div class="auth-brand-logo">
+                D
             </div>
+
+            <span>Daily</span>
+
         </div>
 
-        <div class="auth-heading">
-            <h1 id="authTitle">С возвращением</h1>
-            <p id="authSubtitle">
-                Войди в свой аккаунт, чтобы продолжить.
-            </p>
-        </div>
 
-        <form id="authForm">
+        <h1 id="authTitle">
+            С возвращением
+        </h1>
 
-            <div id="displayNameGroup" class="form-group hidden">
-                <label for="displayName">Ваше имя</label>
+        <p id="authSubtitle">
+            Войди в свой аккаунт, чтобы продолжить.
+        </p>
 
-                <div class="input-wrapper">
-                    <span class="input-icon">✦</span>
-                    <input
-                        type="text"
-                        id="displayName"
-                        placeholder="Например, Матвей"
-                        autocomplete="name"
-                    >
-                </div>
+
+        <form
+            id="authForm"
+            class="auth-form"
+        >
+
+            <div
+                id="displayNameGroup"
+                class="form-group hidden"
+            >
+
+                <label for="displayName">
+                    Имя
+                </label>
+
+                <input
+                    id="displayName"
+                    type="text"
+                    placeholder="Как тебя зовут?"
+                    autocomplete="name"
+                >
+
             </div>
 
-            <div class="form-group">
-                <label for="authEmail">Email</label>
 
-                <div class="input-wrapper">
-                    <span class="input-icon">✉</span>
-                    <input
-                        type="email"
-                        id="authEmail"
-                        placeholder="you@example.com"
-                        autocomplete="email"
-                        required
-                    >
-                </div>
+            <div class="form-group">
+
+                <label for="authEmail">
+                    Email
+                </label>
+
+                <input
+                    id="authEmail"
+                    type="email"
+                    placeholder="you@example.com"
+                    autocomplete="email"
+                    required
+                >
+
             </div>
 
-            <div class="form-group">
-                <label for="authPassword">Пароль</label>
 
-                <div class="input-wrapper">
-                    <span class="input-icon">⌑</span>
+            <div class="form-group">
+
+                <label for="authPassword">
+                    Пароль
+                </label>
+
+                <div class="auth-input-wrap">
 
                     <input
-                        type="password"
                         id="authPassword"
+                        type="password"
                         placeholder="Минимум 6 символов"
                         autocomplete="current-password"
-                        minlength="6"
                         required
                     >
 
                     <button
-                        type="button"
-                        class="password-toggle"
                         id="passwordToggle"
+                        class="password-toggle"
+                        type="button"
                         aria-label="Показать пароль"
-                    >◉</button>
+                    >
+                        ◉
+                    </button>
+
                 </div>
+
             </div>
 
-            <div id="authMessage" class="auth-message"></div>
 
-            <button type="submit" id="authSubmit" class="auth-submit">
+            <div
+                id="authMessage"
+                class="auth-message"
+            ></div>
+
+
+            <button
+                id="authSubmit"
+                class="auth-submit"
+                type="submit"
+            >
                 Войти
             </button>
 
         </form>
 
-        <div class="auth-switch">
-            <span id="authSwitchText">Нет аккаунта?</span>
 
-            <button type="button" id="authSwitchButton">
+        <div class="auth-switch">
+
+            <span id="authSwitchText">
+                Нет аккаунта?
+            </span>
+
+            <button
+                id="authSwitchButton"
+                type="button"
+            >
                 Создать аккаунт
             </button>
+
         </div>
 
+
         <div class="auth-footer">
-            Ваши данные хранятся в защищённой базе Daily.
+            Твой день. Твои задачи. Всё в одном месте.
         </div>
 
     </div>
@@ -133,186 +205,333 @@
 </section>
 
 
-<!-- =========================================================
-     APPLICATION
-========================================================= -->
+<!-- =====================================================
+     APP
+===================================================== -->
 
-<div id="appShell" class="app hidden">
+<div
+    id="appShell"
+    class="app-shell hidden"
+>
 
-    <!-- SIDEBAR -->
+
+    <!-- =================================================
+         SIDEBAR
+    ================================================== -->
 
     <aside class="sidebar">
 
-        <div class="sidebar-top">
+        <div class="sidebar-brand">
 
-            <div class="logo">
-                <div class="logo-icon">D</div>
-
-                <div>
-                    <div class="logo-title">Daily</div>
-                    <div class="logo-subtitle">Твой ежедневник</div>
-                </div>
+            <div class="logo-mark">
+                D
             </div>
 
-            <button
-                id="mobileSidebarClose"
-                class="mobile-close"
-                type="button"
-            >×</button>
+            <div class="logo-text">
+                Daily
+            </div>
 
         </div>
 
 
-        <nav class="navigation">
+        <div class="sidebar-section-title">
+            НАВИГАЦИЯ
+        </div>
+
+
+        <nav class="sidebar-nav">
 
             <button
                 class="nav-item active"
                 data-view="today"
                 type="button"
             >
-                <span class="nav-icon">⌂</span>
-                <span>Сегодня</span>
+
+                <span class="nav-icon">
+                    ◷
+                </span>
+
+                <span class="nav-label">
+                    Сегодня
+                </span>
+
             </button>
+
 
             <button
                 class="nav-item"
                 data-view="tasks"
                 type="button"
             >
-                <span class="nav-icon">✓</span>
-                <span>Задачи</span>
-                <span id="taskCountBadge" class="nav-count">0</span>
+
+                <span class="nav-icon">
+                    ✓
+                </span>
+
+                <span class="nav-label">
+                    Задачи
+                </span>
+
+                <span
+                    id="taskCountBadge"
+                    class="nav-badge"
+                >
+                    0
+                </span>
+
             </button>
+
 
             <button
                 class="nav-item"
                 data-view="calendar"
                 type="button"
             >
-                <span class="nav-icon">□</span>
-                <span>Календарь</span>
+
+                <span class="nav-icon">
+                    □
+                </span>
+
+                <span class="nav-label">
+                    Календарь
+                </span>
+
             </button>
+
 
             <button
                 class="nav-item"
                 data-view="favorites"
                 type="button"
             >
-                <span class="nav-icon">☆</span>
-                <span>Избранное</span>
+
+                <span class="nav-icon">
+                    ☆
+                </span>
+
+                <span class="nav-label">
+                    Избранное
+                </span>
+
             </button>
 
         </nav>
 
 
-        <div class="sidebar-section">
+        <div class="sidebar-section-title">
 
-            <div class="section-title">
-                <span>МОИ СПИСКИ</span>
+            <span>
+                СПИСКИ
+            </span>
 
-                <button
-                    id="addListButton"
-                    class="add-list"
-                    type="button"
-                    title="Добавить список"
-                >+</button>
-            </div>
-
-            <div id="listsContainer"></div>
+            <button
+                id="addListButton"
+                type="button"
+                title="Создать список"
+            >
+                +
+            </button>
 
         </div>
 
 
-        <div class="sidebar-bottom">
+        <div
+            id="listsContainer"
+            class="lists-container"
+        ></div>
+
+
+        <div class="sidebar-spacer"></div>
+
+
+        <nav class="sidebar-nav">
 
             <button
                 class="nav-item"
                 data-view="settings"
                 type="button"
             >
-                <span class="nav-icon">⚙</span>
-                <span>Настройки</span>
+
+                <span class="nav-icon">
+                    ⚙
+                </span>
+
+                <span class="nav-label">
+                    Настройки
+                </span>
+
             </button>
 
+        </nav>
+
+
+        <div class="sidebar-profile">
 
             <button
                 id="profileButton"
-                class="profile"
+                class="profile-button"
                 type="button"
             >
 
-                <div id="profileAvatar" class="profile-avatar">
+                <div
+                    id="profileAvatar"
+                    class="profile-avatar"
+                >
                     D
                 </div>
 
                 <div class="profile-info">
-                    <strong id="profileName">Мой профиль</strong>
-                    <span id="profileEmail">Аккаунт</span>
+
+                    <div
+                        id="profileName"
+                        class="profile-name"
+                    >
+                        Мой профиль
+                    </div>
+
+                    <div
+                        id="profileEmail"
+                        class="profile-email"
+                    >
+                        Аккаунт
+                    </div>
+
                 </div>
 
-                <span class="profile-more">•••</span>
+                <span class="profile-more">
+                    ···
+                </span>
 
             </button>
 
         </div>
 
+
+        <button
+            id="mobileSidebarClose"
+            class="mobile-sidebar-close hidden"
+            type="button"
+        >
+            ×
+        </button>
+
     </aside>
 
 
-    <!-- MOBILE OVERLAY -->
+    <div
+        id="sidebarOverlay"
+        class="sidebar-overlay"
+    ></div>
 
-    <div id="sidebarOverlay" class="sidebar-overlay"></div>
 
-
-    <!-- MAIN -->
+    <!-- =================================================
+         MAIN
+    ================================================== -->
 
     <main class="main">
 
+
+        <!-- =============================================
+             TOPBAR
+        ============================================== -->
+
         <header class="topbar">
 
-            <div class="topbar-left">
+            <button
+                id="mobileMenuButton"
+                class="mobile-menu-button"
+                type="button"
+                aria-label="Открыть меню"
+            >
+                ☰
+            </button>
 
-                <button
-                    id="mobileMenuButton"
-                    class="mobile-menu"
-                    type="button"
-                >☰</button>
 
-                <div class="breadcrumb">
-                    <span id="breadcrumbMain">Сегодня</span>
-                    <span class="breadcrumb-arrow">/</span>
-                    <span id="breadcrumbSub" class="muted">Мой день</span>
-                </div>
+            <div class="breadcrumb">
+
+                <span
+                    id="breadcrumbMain"
+                    class="breadcrumb-main"
+                >
+                    Сегодня
+                </span>
+
+                <span class="breadcrumb-separator">
+                    /
+                </span>
+
+                <span
+                    id="breadcrumbSub"
+                    class="breadcrumb-sub"
+                >
+                    Мой день
+                </span>
 
             </div>
 
 
-            <div class="top-actions">
+            <div class="topbar-spacer"></div>
+
+
+            <div class="topbar-actions">
+
 
                 <button
                     id="searchButton"
                     class="icon-button"
                     type="button"
                     title="Поиск"
-                >⌕</button>
-
-                <button
-                    id="notificationButton"
-                    class="icon-button notification-button"
-                    type="button"
-                    title="Уведомления"
+                    aria-label="Поиск"
                 >
-                    ♧
-                    <span id="notificationDot" class="notification-dot hidden"></span>
+                    ⌕
                 </button>
+
+
+                <div class="notification-wrap">
+
+                    <button
+                        id="notificationButton"
+                        class="icon-button"
+                        type="button"
+                        title="Уведомления"
+                        aria-label="Уведомления"
+                    >
+                        ♡
+                    </button>
+
+
+                    <div
+                        id="notificationPopover"
+                        class="notification-popover hidden"
+                    >
+
+                        <div class="notification-title">
+                            Уведомления
+                        </div>
+
+                        <div class="notification-text">
+                            Здесь будут появляться важные напоминания.
+                        </div>
+
+                    </div>
+
+                </div>
+
 
                 <button
                     id="newTaskButton"
                     class="new-task-button"
                     type="button"
                 >
-                    <span>+</span>
-                    Новая задача
+
+                    <span>
+                        +
+                    </span>
+
+                    <span class="new-task-label">
+                        Новая задача
+                    </span>
+
                 </button>
 
             </div>
@@ -320,149 +539,339 @@
         </header>
 
 
-        <section class="content">
+        <!-- =============================================
+             CONTENT
+        ============================================== -->
 
-            <!-- WELCOME -->
+        <div class="content">
 
-            <div class="welcome">
 
-                <div class="welcome-text">
+            <!-- =========================================
+                 WELCOME
+            ========================================== -->
 
-                    <div id="dateLabel" class="date-label">
+            <section class="welcome">
+
+                <div class="welcome-copy">
+
+                    <div
+                        id="dateLabel"
+                        class="date-label"
+                    >
                         СЕГОДНЯ
                     </div>
 
                     <h1>
-                        Добрый день,
-                        <span id="welcomeName">друг</span>
-                        <span>👋</span>
+                        <span id="welcomeName">
+                            Мой
+                        </span>,
+                        твой день начинается здесь.
                     </h1>
-
-                    <p>
-                        Давай сделаем сегодняшний день продуктивным.
-                    </p>
 
                 </div>
 
 
                 <div class="progress-card">
 
-                    <div class="progress-info">
-                        <span>Прогресс дня</span>
-                        <strong id="progressPercent">0%</strong>
+                    <div class="progress-top">
+
+                        <span>
+                            Прогресс дня
+                        </span>
+
+                        <span
+                            id="progressPercent"
+                            class="progress-percent"
+                        >
+                            0%
+                        </span>
+
                     </div>
 
-                    <div class="progress-bar">
+
+                    <div class="progress-track">
+
                         <div
                             id="progressValue"
                             class="progress-value"
                         ></div>
+
                     </div>
 
-                    <small id="progressText">
+
+                    <div
+                        id="progressText"
+                        class="progress-text"
+                    >
                         0 из 0 задач выполнено
-                    </small>
+                    </div>
 
                 </div>
 
-            </div>
+            </section>
 
 
-            <!-- DASHBOARD -->
+            <!-- =========================================
+                 DASHBOARD
+            ========================================== -->
 
-            <div class="dashboard-grid">
+            <section class="dashboard-grid">
 
 
-                <!-- TASKS -->
+                <!-- =====================================
+                     TASKS
+                ====================================== -->
 
-                <section class="card tasks-card">
+                <article class="card tasks-card">
 
                     <div class="card-header">
 
                         <div>
-                            <h2>Мои задачи</h2>
-                            <p id="tasksSubtitle">
+
+                            <h2 class="card-title">
+                                Задачи
+                            </h2>
+
+                            <div
+                                id="tasksSubtitle"
+                                class="card-subtitle"
+                            >
                                 Что нужно сделать сегодня
-                            </p>
+                            </div>
+
                         </div>
+
 
                         <button
-                            id="tasksMoreButton"
-                            class="more-button"
+                            id="addTaskButton"
+                            class="card-add-button"
                             type="button"
-                        >•••</button>
+                        >
+                            + Добавить
+                        </button>
 
                     </div>
 
 
-                    <div id="taskList" class="task-list">
+                    <div class="card-body">
 
-                        <div class="empty-state">
-                            <div class="empty-icon">✓</div>
-                            <strong>Пока нет задач</strong>
-                            <span>Добавьте первую задачу на сегодня</span>
-                        </div>
+                        <div
+                            id="taskList"
+                            class="task-list"
+                        ></div>
 
                     </div>
 
-
-                    <button
-                        id="addTaskButton"
-                        class="add-task"
-                        type="button"
-                    >
-                        <span>+</span>
-                        Добавить задачу
-                    </button>
-
-                </section>
+                </article>
 
 
-                <!-- CALENDAR -->
+                <!-- =====================================
+                     CALENDAR
+                ====================================== -->
 
-                <section class="card calendar-card">
+                <article class="card calendar-card">
 
                     <div class="card-header">
 
                         <div>
-                            <h2 id="calendarTitle">
+
+                            <h2
+                                id="calendarTitle"
+                                class="card-title"
+                            >
                                 Сентябрь 2026
                             </h2>
 
-                            <p>
-                                Ваш календарь
-                            </p>
+                            <div class="card-subtitle">
+                                Выбери день
+                            </div>
+
                         </div>
 
 
-                        <div class="calendar-arrows">
+                        <div class="calendar-header-actions">
 
                             <button
                                 id="previousMonth"
+                                class="calendar-nav-button"
                                 type="button"
                                 title="Предыдущий месяц"
-                            >‹</button>
+                            >
+                                ‹
+                            </button>
 
                             <button
                                 id="todayMonth"
+                                class="calendar-today-button"
                                 type="button"
-                                title="Сегодня"
-                            >●</button>
+                            >
+                                Сегодня
+                            </button>
 
                             <button
                                 id="nextMonth"
+                                class="calendar-nav-button"
                                 type="button"
                                 title="Следующий месяц"
-                            >›</button>
+                            >
+                                ›
+                            </button>
 
                         </div>
 
                     </div>
 
 
-                    <div class="calendar">
+                    <div class="card-body">
 
-                        <div class="weekdays">
+                        <div class="calendar-weekdays">
+
+                            <div class="calendar-weekday">
+                                ПН
+                            </div>
+
+                            <div class="calendar-weekday">
+                                ВТ
+                            </div>
+
+                            <div class="calendar-weekday">
+                                СР
+                            </div>
+
+                            <div class="calendar-weekday">
+                                ЧТ
+                            </div>
+
+                            <div class="calendar-weekday">
+                                ПТ
+                            </div>
+
+                            <div class="calendar-weekday">
+                                СБ
+                            </div>
+
+                            <div class="calendar-weekday">
+                                ВС
+                            </div>
+
+                        </div>
+
+
+                        <div
+                            id="calendarDays"
+                            class="calendar-days"
+                        ></div>
+
+                    </div>
+
+                </article>
+
+
+                <!-- =====================================
+                     NOTES
+                ====================================== -->
+
+                <article class="card note-card">
+
+                    <div class="card-header">
+
+                        <div>
+
+                            <h2 class="card-title">
+                                Заметка дня
+                            </h2>
+
+                            <div class="card-subtitle">
+                                Мысли, идеи и планы
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="card-body">
+
+                        <textarea
+                            id="noteInput"
+                            class="note-input"
+                            placeholder="Что сегодня важно не забыть?"
+                        ></textarea>
+
+
+                        <div class="note-footer">
+
+                            <span
+                                id="noteStatus"
+                                class="note-status"
+                            >
+                                Нет заметки на этот день
+                            </span>
+
+
+                            <button
+                                id="saveNoteButton"
+                                class="save-note-button"
+                                type="button"
+                            >
+                                Сохранить
+                            </button>
+
+                        </div>
+
+                    </div>
+
+                </article>
+
+
+                <!-- =====================================
+                     STATS
+                ====================================== -->
+
+                <article class="card stats-card">
+
+                    <div class="card-header">
+
+                        <div>
+
+                            <h2 class="card-title">
+                                Эта неделя
+                            </h2>
+
+                            <div class="card-subtitle">
+                                Выполненные задачи
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="card-body">
+
+                        <div class="stats-main">
+
+                            <div
+                                id="weekCompletedCount"
+                                class="week-completed-count"
+                            >
+                                0
+                                <span>
+                                    задач
+                                </span>
+                            </div>
+
+                        </div>
+
+
+                        <div
+                            id="miniChart"
+                            class="mini-chart"
+                        ></div>
+
+
+                        <div class="chart-labels">
+
                             <span>ПН</span>
                             <span>ВТ</span>
                             <span>СР</span>
@@ -470,147 +879,77 @@
                             <span>ПТ</span>
                             <span>СБ</span>
                             <span>ВС</span>
-                        </div>
 
-                        <div id="calendarDays" class="days"></div>
-
-                    </div>
-
-                </section>
-
-
-                <!-- NOTE -->
-
-                <section class="card note-card">
-
-                    <div class="card-header">
-
-                        <div>
-                            <h2>Быстрая заметка</h2>
-                            <p>
-                                Запишите мысль, чтобы не забыть
-                            </p>
-                        </div>
-
-                        <span class="note-icon">✦</span>
-
-                    </div>
-
-
-                    <textarea
-                        id="noteInput"
-                        placeholder="Начните писать..."
-                    ></textarea>
-
-
-                    <div class="note-footer">
-
-                        <span id="noteStatus">
-                            Нет сохранённых изменений
-                        </span>
-
-                        <button
-                            id="saveNoteButton"
-                            type="button"
-                        >
-                            Сохранить
-                        </button>
-
-                    </div>
-
-                </section>
-
-
-                <!-- STATS -->
-
-                <section class="card stats-card">
-
-                    <div class="card-header">
-
-                        <div>
-                            <h2>Статистика</h2>
-                            <p>Ваша продуктивность</p>
-                        </div>
-
-                        <span class="stats-icon">↗</span>
-
-                    </div>
-
-
-                    <div class="stats-content">
-
-                        <div
-                            id="weekCompletedCount"
-                            class="stat-number"
-                        >
-                            0
-                            <span>задач</span>
-                        </div>
-
-                        <div class="stat-description">
-                            выполнено<br>
-                            за эту неделю
                         </div>
 
                     </div>
 
-
-                    <div id="miniChart" class="mini-chart"></div>
-
-
-                    <div class="chart-days">
-                        <span>ПН</span>
-                        <span>ВТ</span>
-                        <span>СР</span>
-                        <span>ЧТ</span>
-                        <span>ПТ</span>
-                        <span>СБ</span>
-                        <span>ВС</span>
-                    </div>
-
-                </section>
-
-            </div>
-
-
-            <!-- FAVORITES -->
-
-            <section
-                id="favoritesPanel"
-                class="card full-panel hidden"
-            >
-
-                <div class="card-header">
-
-                    <div>
-                        <h2>Избранное</h2>
-                        <p>Ваши важные задачи</p>
-                    </div>
-
-                </div>
-
-                <div id="favoritesList" class="task-list"></div>
+                </article>
 
             </section>
 
 
-            <!-- ALL TASKS -->
+            <!-- =========================================
+                 FAVORITES
+            ========================================== -->
+
+            <section
+                id="favoritesPanel"
+                class="full-panel hidden"
+            >
+
+                <div class="panel-header">
+
+                    <div>
+
+                        <h2>
+                            Избранное
+                        </h2>
+
+                        <p>
+                            Важные задачи, которые ты отметил
+                        </p>
+
+                    </div>
+
+                </div>
+
+
+                <div
+                    id="favoritesList"
+                    class="panel-body"
+                ></div>
+
+            </section>
+
+
+            <!-- =========================================
+                 ALL TASKS
+            ========================================== -->
 
             <section
                 id="allTasksPanel"
-                class="card full-panel hidden"
+                class="full-panel hidden"
             >
 
-                <div class="card-header">
+                <div class="panel-header">
 
                     <div>
-                        <h2>Все задачи</h2>
-                        <p>Ваши задачи на выбранный день</p>
+
+                        <h2>
+                            Задачи
+                        </h2>
+
+                        <p>
+                            Задачи выбранного дня
+                        </p>
+
                     </div>
+
 
                     <button
                         id="allTasksAddButton"
-                        class="small-primary-button"
+                        class="card-add-button"
                         type="button"
                     >
                         + Добавить
@@ -618,48 +957,74 @@
 
                 </div>
 
-                <div id="allTasksList" class="task-list"></div>
+
+                <div
+                    id="allTasksList"
+                    class="panel-body"
+                ></div>
 
             </section>
 
-
-        </section>
+        </div>
 
     </main>
 
 </div>
 
 
-<!-- =========================================================
+<!-- =====================================================
      TASK MODAL
-========================================================= -->
+===================================================== -->
 
-<div id="taskModal" class="modal-overlay hidden">
+<div
+    id="taskModal"
+    class="modal hidden"
+>
 
-    <div class="modal task-modal">
+    <div class="modal-card">
 
-        <button
-            id="closeTaskModal"
-            class="modal-close"
-            type="button"
-        >×</button>
+        <div class="modal-header">
 
-        <div class="modal-icon">+</div>
+            <div class="modal-title-wrap">
 
-        <h2 id="taskModalTitle">
-            Новая задача
-        </h2>
+                <div class="modal-icon">
+                    ✓
+                </div>
 
-        <p id="taskModalSubtitle">
-            Добавьте задачу в свой план.
-        </p>
+                <div>
+
+                    <h2 id="taskModalTitle">
+                        Новая задача
+                    </h2>
+
+                    <p id="taskModalSubtitle">
+                        Добавьте задачу в свой план.
+                    </p>
+
+                </div>
+
+            </div>
 
 
-        <form id="taskForm">
+            <button
+                id="closeTaskModal"
+                class="modal-close"
+                type="button"
+            >
+                ×
+            </button>
+
+        </div>
+
+
+        <form
+            id="taskForm"
+            class="modal-form"
+        >
 
             <input
-                type="hidden"
                 id="editingTaskId"
+                type="hidden"
             >
 
 
@@ -670,9 +1035,9 @@
                 </label>
 
                 <input
-                    type="text"
                     id="taskName"
-                    placeholder="Например: Позвонить клиенту"
+                    type="text"
+                    placeholder="Например: Подготовить презентацию"
                     autocomplete="off"
                     required
                 >
@@ -680,51 +1045,49 @@
             </div>
 
 
-            <div class="form-row">
+            <div class="form-group">
 
-                <div class="form-group">
+                <label for="taskTime">
+                    Время
+                </label>
 
-                    <label for="taskTime">
-                        Время
-                    </label>
-
-                    <input
-                        type="time"
-                        id="taskTime"
-                        value="12:00"
-                    >
-
-                </div>
-
-
-                <div class="form-group">
-
-                    <label for="taskCategory">
-                        Список
-                    </label>
-
-                    <select id="taskCategory"></select>
-
-                </div>
+                <input
+                    id="taskTime"
+                    type="time"
+                    value="12:00"
+                >
 
             </div>
 
 
-            <div class="modal-actions">
+            <div class="form-group">
+
+                <label for="taskCategory">
+                    Список
+                </label>
+
+                <select
+                    id="taskCategory"
+                ></select>
+
+            </div>
+
+
+            <div class="form-actions">
 
                 <button
-                    type="button"
                     id="cancelTask"
-                    class="cancel-button"
+                    class="secondary-button"
+                    type="button"
                 >
                     Отмена
                 </button>
 
                 <button
+                    class="primary-button"
                     type="submit"
-                    class="create-task-button"
                 >
-                    Сохранить
+                    Сохранить задачу
                 </button>
 
             </div>
@@ -736,30 +1099,55 @@
 </div>
 
 
-<!-- =========================================================
+<!-- =====================================================
      LIST MODAL
-========================================================= -->
+===================================================== -->
 
-<div id="listModal" class="modal-overlay hidden">
+<div
+    id="listModal"
+    class="modal hidden"
+>
 
-    <div class="modal small-modal">
+    <div class="modal-card">
 
-        <button
-            id="closeListModal"
-            class="modal-close"
-            type="button"
-        >×</button>
+        <div class="modal-header">
 
-        <div class="modal-icon">+</div>
+            <div class="modal-title-wrap">
 
-        <h2>Новый список</h2>
+                <div class="modal-icon">
+                    +
+                </div>
 
-        <p>
-            Создайте собственную категорию задач.
-        </p>
+                <div>
+
+                    <h2>
+                        Новый список
+                    </h2>
+
+                    <p>
+                        Организуйте задачи по категориям.
+                    </p>
+
+                </div>
+
+            </div>
 
 
-        <form id="listForm">
+            <button
+                id="closeListModal"
+                class="modal-close"
+                type="button"
+            >
+                ×
+            </button>
+
+        </div>
+
+
+        <form
+            id="listForm"
+            class="modal-form"
+        >
 
             <div class="form-group">
 
@@ -768,18 +1156,21 @@
                 </label>
 
                 <input
-                    type="text"
                     id="listName"
-                    placeholder="Например: Проекты"
+                    type="text"
+                    placeholder="Например: Личное"
                     required
                 >
 
             </div>
 
 
-            <div class="color-picker-row">
+            <div class="form-group">
 
-                <span>Цвет</span>
+                <label>
+                    Цвет
+                </label>
+
 
                 <div class="color-options">
 
@@ -787,35 +1178,42 @@
                         type="button"
                         class="color-option selected"
                         data-color="#6C63FF"
-                        style="--dot-color:#6C63FF"
+                        style="--color:#6C63FF"
                     ></button>
 
                     <button
                         type="button"
                         class="color-option"
                         data-color="#4F9CF9"
-                        style="--dot-color:#4F9CF9"
+                        style="--color:#4F9CF9"
                     ></button>
 
                     <button
                         type="button"
                         class="color-option"
                         data-color="#36B37E"
-                        style="--dot-color:#36B37E"
+                        style="--color:#36B37E"
                     ></button>
 
                     <button
                         type="button"
                         class="color-option"
-                        data-color="#F59E0B"
-                        style="--dot-color:#F59E0B"
+                        data-color="#F0AD4E"
+                        style="--color:#F0AD4E"
                     ></button>
 
                     <button
                         type="button"
                         class="color-option"
-                        data-color="#EC4899"
-                        style="--dot-color:#EC4899"
+                        data-color="#EF6262"
+                        style="--color:#EF6262"
+                    ></button>
+
+                    <button
+                        type="button"
+                        class="color-option"
+                        data-color="#D16CE7"
+                        style="--color:#D16CE7"
                     ></button>
 
                 </div>
@@ -823,21 +1221,21 @@
             </div>
 
 
-            <div class="modal-actions">
+            <div class="form-actions">
 
                 <button
-                    type="button"
                     id="cancelList"
-                    class="cancel-button"
+                    class="secondary-button"
+                    type="button"
                 >
                     Отмена
                 </button>
 
                 <button
+                    class="primary-button"
                     type="submit"
-                    class="create-task-button"
                 >
-                    Создать
+                    Создать список
                 </button>
 
             </div>
@@ -849,35 +1247,56 @@
 </div>
 
 
-<!-- =========================================================
+<!-- =====================================================
      SEARCH MODAL
-========================================================= -->
+===================================================== -->
 
-<div id="searchModal" class="modal-overlay hidden">
+<div
+    id="searchModal"
+    class="modal hidden"
+>
 
-    <div class="modal search-modal">
+    <div class="modal-card search-modal-card">
 
-        <button
-            id="closeSearchModal"
-            class="modal-close"
-            type="button"
-        >×</button>
+        <div class="modal-header">
 
-        <div class="search-large-icon">⌕</div>
+            <div class="modal-title-wrap">
 
-        <h2>Поиск</h2>
+                <div class="modal-icon">
+                    ⌕
+                </div>
 
-        <p>
-            Найдите любую задачу в своём ежедневнике.
-        </p>
+                <div>
+
+                    <h2>
+                        Поиск
+                    </h2>
+
+                    <p>
+                        Найдите любую задачу в Daily.
+                    </p>
+
+                </div>
+
+            </div>
 
 
-        <div class="search-input-large">
+            <button
+                id="closeSearchModal"
+                class="modal-close"
+                type="button"
+            >
+                ×
+            </button>
 
-            <span>⌕</span>
+        </div>
+
+
+        <div class="search-wrap">
 
             <input
                 id="searchInput"
+                class="search-input"
                 type="search"
                 placeholder="Введите название задачи..."
                 autocomplete="off"
@@ -902,45 +1321,74 @@
 </div>
 
 
-<!-- =========================================================
+<!-- =====================================================
      SETTINGS MODAL
-========================================================= -->
+===================================================== -->
 
-<div id="settingsModal" class="modal-overlay hidden">
+<div
+    id="settingsModal"
+    class="modal hidden"
+>
 
-    <div class="modal settings-modal">
+    <div class="modal-card">
 
-        <button
-            id="closeSettingsModal"
-            class="modal-close"
-            type="button"
-        >×</button>
+        <div class="modal-header">
 
-        <div class="settings-header">
+            <div class="modal-title-wrap">
 
-            <div id="settingsAvatar" class="settings-avatar">
-                D
+                <div class="modal-icon">
+                    ⚙
+                </div>
+
+                <div>
+
+                    <h2>
+                        Настройки
+                    </h2>
+
+                    <p>
+                        Управление профилем Daily.
+                    </p>
+
+                </div>
+
             </div>
 
-            <div>
-                <h2>Настройки аккаунта</h2>
-                <p id="settingsEmail">
-                    —
-                </p>
-            </div>
+
+            <button
+                id="closeSettingsModal"
+                class="modal-close"
+                type="button"
+            >
+                ×
+            </button>
 
         </div>
 
 
-        <div class="settings-block">
+        <div class="settings-profile">
 
-            <div class="settings-row">
+            <div
+                id="settingsAvatar"
+                class="settings-avatar"
+            >
+                D
+            </div>
 
-                <div>
-                    <strong>Ваше имя</strong>
-                    <span id="settingsName">
-                        —
-                    </span>
+            <div>
+
+                <div
+                    id="settingsName"
+                    class="settings-name"
+                >
+                    Мой профиль
+                </div>
+
+                <div
+                    id="settingsEmail"
+                    class="settings-email"
+                >
+                    Аккаунт
                 </div>
 
             </div>
@@ -948,54 +1396,68 @@
         </div>
 
 
-        <button
-            id="logoutButton"
-            class="logout-button"
-            type="button"
+        <div class="form-group">
+
+            <label>
+                Профиль
+            </label>
+
+            <div
+                style="
+                    padding:13px 14px;
+                    background:#f8f8fa;
+                    border:1px solid var(--border);
+                    border-radius:12px;
+                    color:var(--text-secondary);
+                    font-size:11px;
+                "
+            >
+                Здесь позже появятся расширенные настройки профиля.
+            </div>
+
+        </div>
+
+
+        <div
+            class="form-actions"
+            style="margin-top:20px;"
         >
-            Выйти из аккаунта
-        </button>
+
+            <button
+                id="logoutButton"
+                class="logout-button"
+                type="button"
+            >
+                Выйти из аккаунта
+            </button>
+
+        </div>
 
     </div>
 
 </div>
 
 
-<!-- =========================================================
-     NOTIFICATION POPOVER
-========================================================= -->
+<!-- =====================================================
+     TOAST
+===================================================== -->
 
 <div
-    id="notificationPopover"
-    class="notification-popover hidden"
->
-
-    <div class="popover-title">
-        Уведомления
-    </div>
-
-    <div class="popover-empty">
-        <div>♧</div>
-        <strong>Пока всё спокойно</strong>
-        <span>Новых уведомлений нет.</span>
-    </div>
-
-</div>
+    id="toastContainer"
+    class="toast-container"
+></div>
 
 
-<!-- =========================================================
-     TOAST
-========================================================= -->
-
-<div id="toastContainer" class="toast-container"></div>
-
-
-<!-- =========================================================
+<!-- =====================================================
      SCRIPTS
-========================================================= -->
+===================================================== -->
 
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script
+    src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"
+></script>
+
 <script src="supabase-config.js"></script>
+
 <script src="script.js"></script>
 
 </body>
