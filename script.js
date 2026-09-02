@@ -1,35 +1,56 @@
 /* =========================================================
-   DAILY v100
+   DAILY 100
    SUPABASE APPLICATION
 ========================================================= */
 
 (() => {
+
     "use strict";
 
 
     /* =====================================================
-       SUPABASE
-    ====================================================== */
+       CONFIG
+    ===================================================== */
 
     if (!window.supabase) {
+
         console.error("Supabase JS не загружен.");
+
         return;
+
     }
+
 
     if (!window.DAILY_CONFIG) {
+
         console.error("supabase-config.js не найден.");
+
         return;
+
     }
 
-    const supabaseClient = window.supabase.createClient(
+
+    const client = window.supabase.createClient(
         window.DAILY_CONFIG.supabaseUrl,
         window.DAILY_CONFIG.supabaseKey
     );
 
 
     /* =====================================================
+       DOM
+    ===================================================== */
+
+    const $ = (selector) =>
+        document.querySelector(selector);
+
+
+    const $$ = (selector) =>
+        Array.from(document.querySelectorAll(selector));
+
+
+    /* =====================================================
        STATE
-    ====================================================== */
+    ===================================================== */
 
     const state = {
 
@@ -39,404 +60,427 @@
         lists: [],
         tasks: [],
 
-        selectedDate: getTodayString(),
-
-        calendarDate: new Date(),
-
         activeView: "today",
 
-        activeTaskFilter: "all",
+        selectedDate: dateKey(new Date()),
+
+        calendarMonth: new Date(
+            new Date().getFullYear(),
+            new Date().getMonth(),
+            1
+        ),
 
         selectedListId: null,
 
         editingTaskId: null,
 
+        taskFilter: "all",
+
+        taskSort: "date",
+
         noteTimer: null,
 
-        updatingTaskIds: new Set(),
+        noteDate: null,
 
-        authMode: "login",
+        updatingTasks: new Set(),
 
-        autosaveNotes: true,
+        settings: {
 
-        initialized: false
+            autosave: true,
+
+            priorityFirst: true
+
+        }
 
     };
 
 
     /* =====================================================
-       DOM
-    ====================================================== */
+       HELPERS
+    ===================================================== */
 
-    const $ = (id) => document.getElementById(id);
+    function dateKey(date) {
 
-    const loadingScreen = $("loadingScreen");
-    const authScreen = $("authScreen");
-    const appShell = $("appShell");
+        const year = date.getFullYear();
 
-    const authForm = $("authForm");
-    const authTitle = $("authTitle");
-    const authSubtitle = $("authSubtitle");
-    const authSubmitButton = $("authSubmitButton");
-    const authModeSwitch = $("authModeSwitch");
-    const authMessage = $("authMessage");
-    const displayNameField = $("displayNameField");
+        const month = String(
+            date.getMonth() + 1
+        ).padStart(2, "0");
 
-    const taskModal = $("taskModal");
-    const taskForm = $("taskForm");
+        const day = String(
+            date.getDate()
+        ).padStart(2, "0");
 
-    const listModal = $("listModal");
-    const listForm = $("listForm");
+        return `${year}-${month}-${day}`;
 
-    const searchModal = $("searchModal");
-    const searchInput = $("searchInput");
-
-    const settingsModal = $("settingsModal");
-
-    const sidebar = $("sidebar");
-    const sidebarOverlay = $("sidebarOverlay");
-
-
-    /* =====================================================
-       DATE HELPERS
-    ====================================================== */
-
-    function pad(value) {
-        return String(value).padStart(2, "0");
     }
 
 
-    function getTodayString() {
+    function parseDate(value) {
 
-        const date = new Date();
+        if (!value) {
+            return null;
+        }
 
-        return [
-            date.getFullYear(),
-            pad(date.getMonth() + 1),
-            pad(date.getDate())
-        ].join("-");
-    }
+        const parts = String(value)
+            .slice(0, 10)
+            .split("-")
+            .map(Number);
 
-
-    function dateToString(date) {
-
-        return [
-            date.getFullYear(),
-            pad(date.getMonth() + 1),
-            pad(date.getDate())
-        ].join("-");
-    }
-
-
-    function stringToDate(value) {
-
-        const parts = String(value).split("-").map(Number);
+        if (parts.length !== 3) {
+            return null;
+        }
 
         return new Date(
             parts[0],
             parts[1] - 1,
             parts[2]
         );
+
     }
 
 
-    function formatLongDate(value) {
+    function formatDateLong(value) {
 
-        const date = stringToDate(value);
+        const date = parseDate(value);
 
-        return new Intl.DateTimeFormat("ru-RU", {
-            day: "numeric",
-            month: "long",
-            year: "numeric"
-        }).format(date);
+        if (!date) {
+            return "Без даты";
+        }
+
+        return new Intl.DateTimeFormat(
+            "ru-RU",
+            {
+                weekday: "long",
+                day: "numeric",
+                month: "long"
+            }
+        ).format(date);
+
     }
 
 
-    function formatShortDate(value) {
+    function formatDateShort(value) {
 
-        const date = stringToDate(value);
+        const date = parseDate(value);
 
-        return new Intl.DateTimeFormat("ru-RU", {
-            day: "numeric",
-            month: "short"
-        }).format(date);
+        if (!date) {
+            return "Без даты";
+        }
+
+        return new Intl.DateTimeFormat(
+            "ru-RU",
+            {
+                day: "numeric",
+                month: "short"
+            }
+        ).format(date);
+
     }
 
 
-    function getWeekdayShort(date) {
+    function monthName(date) {
 
-        return new Intl.DateTimeFormat("ru-RU", {
-            weekday: "short"
-        })
-            .format(date)
-            .replace(".", "")
-            .slice(0, 2)
-            .toUpperCase();
+        return new Intl.DateTimeFormat(
+            "ru-RU",
+            {
+                month: "long",
+                year: "numeric"
+            }
+        ).format(date);
+
     }
 
 
-    function getMonthName(date) {
+    function escapeHtml(value) {
 
-        return new Intl.DateTimeFormat("ru-RU", {
-            month: "long",
-            year: "numeric"
-        }).format(date);
+        return String(value ?? "")
+            .replaceAll("&", "&amp;")
+            .replaceAll("<", "&lt;")
+            .replaceAll(">", "&gt;")
+            .replaceAll('"', "&quot;")
+            .replaceAll("'", "&#039;");
+
+    }
+
+
+    function getInitials(name) {
+
+        const clean = String(name || "D")
+            .trim()
+            .split(/\s+/)
+            .slice(0, 2);
+
+        return clean
+            .map(item => item[0])
+            .join("")
+            .toUpperCase() || "D";
+
     }
 
 
     function isToday(value) {
-        return value === getTodayString();
+
+        return value === dateKey(new Date());
+
     }
 
 
     function isOverdue(task) {
 
-        if (!task || task.completed || !task.due_date) {
+        if (!task || task.completed) {
             return false;
         }
 
-        const today = getTodayString();
-
-        if (task.due_date < today) {
-            return true;
+        if (!task.due_date) {
+            return false;
         }
 
-        if (
-            task.due_date === today &&
-            task.due_time
-        ) {
+        return task.due_date < dateKey(new Date());
 
-            const now = new Date();
+    }
 
-            const current =
-                `${pad(now.getHours())}:${pad(now.getMinutes())}`;
 
-            return task.due_time < current;
+    function priorityWeight(priority) {
+
+        if (priority === "high") {
+            return 3;
         }
 
-        return false;
+        if (priority === "medium") {
+            return 2;
+        }
+
+        return 1;
+
     }
 
 
-    function getGreeting() {
+    function priorityLabel(priority) {
 
-        const hour = new Date().getHours();
+        if (priority === "high") {
+            return "Высокий";
+        }
 
-        if (hour < 5) return "Доброй ночи";
-        if (hour < 12) return "Доброе утро";
-        if (hour < 18) return "Добрый день";
+        if (priority === "medium") {
+            return "Средний";
+        }
 
-        return "Добрый вечер";
+        return "Низкий";
+
     }
 
 
-    /* =====================================================
-       ESCAPE
-    ====================================================== */
+    function taskList(task) {
 
-    function escapeHtml(value) {
+        return state.lists.find(
+            list => String(list.id) === String(task.list_id)
+        );
 
-        return String(value ?? "")
-            .replace(/&/g, "&amp;")
-            .replace(/</g, "&lt;")
-            .replace(/>/g, "&gt;")
-            .replace(/"/g, "&quot;")
-            .replace(/'/g, "&#039;");
     }
 
 
-    /* =====================================================
-       TOAST
-    ====================================================== */
+    function toast(message, type = "success") {
 
-    function showToast(message, type = "success") {
+        const container = $("#toastContainer");
 
-        const container = $("toastContainer");
+        if (!container) {
+            return;
+        }
 
-        if (!container) return;
+        const element = document.createElement("div");
 
-        const toast = document.createElement("div");
+        element.className =
+            `toast ${type}`;
 
-        toast.className = `toast ${type}`;
+        element.textContent = message;
 
-        toast.textContent = message;
-
-        container.appendChild(toast);
+        container.appendChild(element);
 
         setTimeout(() => {
 
-            toast.style.opacity = "0";
-            toast.style.transform = "translateY(8px)";
+            element.remove();
 
-            setTimeout(() => toast.remove(), 200);
+        }, 3200);
 
-        }, 3000);
+    }
+
+
+    function friendlyError(error) {
+
+        if (!error) {
+            return "Неизвестная ошибка.";
+        }
+
+        const message =
+            error.message ||
+            error.error_description ||
+            String(error);
+
+        if (
+            message.toLowerCase().includes("row-level security")
+        ) {
+            return "Supabase отклонил операцию. Проверь правила RLS.";
+        }
+
+        return message;
+
     }
 
 
     /* =====================================================
        AUTH UI
-    ====================================================== */
+    ===================================================== */
+
+    function setAuthMode(register) {
+
+        const title = $("#authTitle");
+        const subtitle = $("#authSubtitle");
+        const submit = $("#authSubmitButton");
+        const switchButton = $("#authModeButton");
+        const displayName = $("#displayNameGroup");
+
+        if (!title) {
+            return;
+        }
+
+        displayName.classList.toggle(
+            "hidden",
+            !register
+        );
+
+        if (register) {
+
+            title.textContent =
+                "Создай свой Daily";
+
+            subtitle.textContent =
+                "Начни организовывать задачи и мысли.";
+
+            submit.textContent =
+                "Создать аккаунт";
+
+            switchButton.textContent =
+                "Уже есть аккаунт? Войти";
+
+        } else {
+
+            title.textContent =
+                "Добро пожаловать";
+
+            subtitle.textContent =
+                "Организуй день красиво и без лишнего шума.";
+
+            submit.textContent =
+                "Войти";
+
+            switchButton.textContent =
+                "Нет аккаунта? Создать";
+
+        }
+
+        $("#authForm").dataset.register =
+            register ? "true" : "false";
+
+    }
+
 
     function showAuth() {
 
-        loadingScreen.classList.add("hidden");
+        $("#loadingScreen")?.classList.add("loaded");
 
-        appShell.classList.add("hidden");
+        $("#authScreen")?.classList.remove("hidden");
 
-        authScreen.classList.remove("hidden");
+        $("#appShell")?.classList.add("hidden");
+
     }
 
 
     function showApp() {
 
-        loadingScreen.classList.add("hidden");
+        $("#authScreen")?.classList.add("hidden");
 
-        authScreen.classList.add("hidden");
+        $("#appShell")?.classList.remove("hidden");
 
-        appShell.classList.remove("hidden");
-    }
+        $("#loadingScreen")?.classList.add("loaded");
 
-
-    function updateAuthMode() {
-
-        authMessage.textContent = "";
-
-        if (state.authMode === "login") {
-
-            authTitle.textContent = "С возвращением";
-
-            authSubtitle.textContent =
-                "Войди, чтобы продолжить свой день.";
-
-            authSubmitButton.textContent = "Войти";
-
-            authModeSwitch.innerHTML =
-                'Нет аккаунта? <strong>Создать</strong>';
-
-            displayNameField.classList.add("hidden");
-
-            $("authPassword").autocomplete = "current-password";
-
-        } else {
-
-            authTitle.textContent = "Создай свой Daily";
-
-            authSubtitle.textContent =
-                "Один аккаунт — и весь твой день всегда с тобой.";
-
-            authSubmitButton.textContent = "Создать аккаунт";
-
-            authModeSwitch.innerHTML =
-                'Уже есть аккаунт? <strong>Войти</strong>';
-
-            displayNameField.classList.remove("hidden");
-
-            $("authPassword").autocomplete = "new-password";
-        }
-    }
-
-
-    function friendlyAuthError(error) {
-
-        const message = String(error?.message || "").toLowerCase();
-
-        if (message.includes("invalid login")) {
-            return "Неверный email или пароль.";
-        }
-
-        if (message.includes("email not confirmed")) {
-            return "Подтверди email и попробуй снова.";
-        }
-
-        if (message.includes("already registered")) {
-            return "Этот email уже зарегистрирован.";
-        }
-
-        if (message.includes("password")) {
-            return "Пароль должен содержать минимум 6 символов.";
-        }
-
-        if (message.includes("rate limit")) {
-            return "Слишком много попыток. Попробуй чуть позже.";
-        }
-
-        return "Не удалось выполнить операцию. Попробуй ещё раз.";
     }
 
 
     /* =====================================================
        PROFILE
-    ====================================================== */
+    ===================================================== */
 
     async function loadProfile() {
 
-        if (!state.user) return;
+        if (!state.user) {
+            return;
+        }
 
-        const {
-            data,
-            error
-        } = await supabaseClient
+        const { data, error } = await client
             .from("profiles")
             .select("*")
             .eq("id", state.user.id)
             .maybeSingle();
 
         if (error) {
-            console.warn("Profile load:", error);
+
+            console.warn(
+                "Не удалось загрузить profile:",
+                error
+            );
+
+            state.profile = {
+                id: state.user.id,
+                display_name:
+                    state.user.email?.split("@")[0] ||
+                    "Пользователь"
+            };
+
             return;
+
         }
 
-        state.profile = data || null;
-
-        renderProfile();
-    }
-
-
-    async function createProfileIfNeeded(displayName) {
-
-        if (!state.user) return;
-
-        const {
-            data,
-            error
-        } = await supabaseClient
-            .from("profiles")
-            .select("*")
-            .eq("id", state.user.id)
-            .maybeSingle();
-
-        if (error) {
-            console.warn("Profile lookup:", error);
-            return;
-        }
 
         if (data) {
 
             state.profile = data;
 
             return;
+
         }
 
-        const name =
-            displayName ||
+
+        const fallbackName =
             state.user.user_metadata?.display_name ||
             state.user.email?.split("@")[0] ||
-            "Daily User";
+            "Пользователь";
 
-        const result =
-            await supabaseClient
+
+        const { data: created, error: createError } =
+            await client
                 .from("profiles")
                 .insert({
                     id: state.user.id,
-                    display_name: name
+                    display_name: fallbackName
                 })
                 .select()
                 .single();
 
-        if (!result.error) {
-            state.profile = result.data;
+
+        if (!createError) {
+
+            state.profile = created;
+
+        } else {
+
+            state.profile = {
+                id: state.user.id,
+                display_name: fallbackName
+            };
+
         }
+
     }
 
 
@@ -446,117 +490,91 @@
             state.profile?.display_name ||
             state.user?.user_metadata?.display_name ||
             state.user?.email?.split("@")[0] ||
-            "Daily User";
+            "Пользователь";
 
-        $("profileName").textContent = name;
 
-        $("profileEmail").textContent =
-            state.user?.email || "";
+        $("#welcomeName").textContent =
+            name.split(" ")[0];
 
-        $("profileAvatar").textContent =
-            name.charAt(0).toUpperCase();
 
-        $("welcomeName").textContent = name.split(" ")[0];
+        $("#sidebarUserName").textContent =
+            name;
 
-        $("welcomeGreeting").textContent =
-            getGreeting();
+
+        $("#sidebarUserEmail").textContent =
+            state.user?.email || "—";
+
+
+        $("#sidebarAvatar").textContent =
+            getInitials(name);
+
+
+        $("#dateLabel").textContent =
+            new Intl.DateTimeFormat(
+                "ru-RU",
+                {
+                    weekday: "long",
+                    day: "numeric",
+                    month: "long"
+                }
+            )
+            .format(new Date())
+            .toUpperCase();
+
+
+        $("#settingsName").value =
+            name;
+
     }
 
 
     /* =====================================================
        LISTS
-    ====================================================== */
+    ===================================================== */
 
     async function loadLists() {
 
-        if (!state.user) return;
-
-        const {
-            data,
-            error
-        } = await supabaseClient
+        const { data, error } = await client
             .from("lists")
             .select("*")
             .eq("user_id", state.user.id)
             .order("created_at", {
                 ascending: true
             });
+
 
         if (error) {
 
-            console.error("Lists:", error);
+            console.error(error);
 
             state.lists = [];
 
-            renderLists();
-
             return;
+
         }
+
 
         state.lists = data || [];
-
-        if (!state.lists.length) {
-
-            await createDefaultLists();
-
-        }
 
         renderLists();
-        renderTaskListSelect();
-    }
+        populateTaskListSelect();
 
-
-    async function createDefaultLists() {
-
-        const defaults = [
-            {
-                name: "Личное"
-            },
-            {
-                name: "Работа"
-            },
-            {
-                name: "Учёба"
-            }
-        ];
-
-        for (const item of defaults) {
-
-            const {
-                error
-            } = await supabaseClient
-                .from("lists")
-                .insert({
-                    user_id: state.user.id,
-                    name: item.name
-                });
-
-            if (error) {
-                console.warn("Default list:", error);
-            }
-        }
-
-        const {
-            data
-        } = await supabaseClient
-            .from("lists")
-            .select("*")
-            .eq("user_id", state.user.id)
-            .order("created_at", {
-                ascending: true
-            });
-
-        state.lists = data || [];
     }
 
 
     function renderLists() {
 
-        const container = $("listsContainer");
+        const container =
+            $("#listsContainer");
+
+        if (!container) {
+            return;
+        }
 
         container.innerHTML = "";
 
-        state.lists.forEach((list, index) => {
+
+        state.lists.forEach(list => {
 
             const button =
                 document.createElement("button");
@@ -564,64 +582,78 @@
             button.type = "button";
 
             button.className =
-                "custom-list-item";
+                "nav-item list-nav-item";
 
-            button.dataset.listId = list.id;
 
             button.innerHTML = `
+
                 <span
-                    class="list-dot"
-                    style="background:${getListColor(index)}"
+                    class="nav-list-dot"
+                    style="--list-color:${escapeHtml(
+                        list.color || "#999"
+                    )}"
                 ></span>
 
                 <span>
                     ${escapeHtml(list.name)}
                 </span>
+
             `;
 
-            button.addEventListener("click", () => {
 
-                state.selectedListId =
-                    state.selectedListId === list.id
-                        ? null
-                        : list.id;
+            button.addEventListener(
+                "click",
+                () => {
 
-                state.activeView = "today";
+                    state.selectedListId =
+                        list.id;
 
-                updateNavigation();
+                    state.activeView =
+                        "today";
 
-                refreshVisibleData();
-            });
+                    updateView();
+
+                    loadTasks();
+
+                }
+            );
+
 
             container.appendChild(button);
 
         });
+
     }
 
 
-    function getListColor(index) {
+    function populateTaskListSelect() {
 
-        const colors = [
-            "#7e9fdb",
-            "#7ab58c",
-            "#d8a15d",
-            "#a18bc6",
-            "#d27878",
-            "#71a7a7"
-        ];
+        const select =
+            $("#taskListSelect");
 
-        return colors[index % colors.length];
-    }
+        if (!select) {
+            return;
+        }
+
+        select.innerHTML = "";
 
 
-    function renderTaskListSelect() {
+        if (!state.lists.length) {
 
-        const select = $("taskListSelect");
+            const option =
+                document.createElement("option");
 
-        if (!select) return;
+            option.value = "";
 
-        select.innerHTML =
-            `<option value="">Без списка</option>`;
+            option.textContent =
+                "Без списка";
+
+            select.appendChild(option);
+
+            return;
+
+        }
+
 
         state.lists.forEach(list => {
 
@@ -630,218 +662,409 @@
 
             option.value = list.id;
 
-            option.textContent = list.name;
+            option.textContent =
+                list.name;
 
             select.appendChild(option);
+
         });
+
+    }
+
+
+    async function createList(name) {
+
+        const clean =
+            String(name || "").trim();
+
+        if (!clean) {
+            return;
+        }
+
+
+        const { error } = await client
+            .from("lists")
+            .insert({
+                user_id: state.user.id,
+                name: clean
+            });
+
+
+        if (error) {
+
+            toast(
+                friendlyError(error),
+                "error"
+            );
+
+            return;
+
+        }
+
+
+        closeModal("#listModal");
+
+        $("#listName").value = "";
+
+        await loadLists();
+
+        toast("Список создан.");
+
     }
 
 
     /* =====================================================
-       TASKS
-    ====================================================== */
+       TASKS LOAD
+    ===================================================== */
 
     async function loadTasks() {
 
-        if (!state.user) return;
+        if (!state.user) {
+            return;
+        }
 
-        try {
 
-            const {
-                data,
+        setTaskLoadingState();
+
+
+        const { data, error } = await client
+            .from("tasks")
+            .select("*")
+            .eq("user_id", state.user.id)
+            .order("due_date", {
+                ascending: true,
+                nullsFirst: false
+            })
+            .order("due_time", {
+                ascending: true,
+                nullsFirst: false
+            });
+
+
+        if (error) {
+
+            console.error(
+                "Ошибка загрузки задач:",
                 error
-            } = await supabaseClient
-                .from("tasks")
-                .select("*")
-                .eq("user_id", state.user.id)
-                .order("due_date", {
-                    ascending: true
-                })
-                .order("due_time", {
-                    ascending: true,
-                    nullsFirst: false
-                })
-                .order("created_at", {
-                    ascending: false
-                });
-
-            if (error) {
-                throw error;
-            }
-
-            state.tasks = data || [];
-
-        } catch (error) {
-
-            console.error("Tasks load:", error);
+            );
 
             state.tasks = [];
 
-            showToast(
-                "Не удалось загрузить задачи.",
-                "error"
+            renderTodayTasks();
+
+            renderAllTasksError(
+                friendlyError(error)
             );
+
+            renderCalendar();
+
+            updateProgress();
+
+            return;
+
         }
 
-        refreshVisibleData();
+
+        state.tasks = data || [];
+
+
+        renderTodayTasks();
+
+        renderAllTasks();
+
+        renderFavorites();
+
+        renderCalendar();
+
+        updateProgress();
+
+        renderStats();
+
+        updateTaskBadge();
+
+        loadNote(state.selectedDate);
+
     }
 
 
-    function getTasksForDate(date) {
+    function setTaskLoadingState() {
 
-        return state.tasks.filter(task => {
+        const todayList =
+            $("#taskList");
 
-            if (task.due_date !== date) {
-                return false;
-            }
+        const allList =
+            $("#allTasksList");
 
-            if (
-                state.selectedListId &&
-                task.list_id !== state.selectedListId
-            ) {
-                return false;
-            }
 
-            return true;
-        });
+        if (todayList) {
+
+            todayList.innerHTML = `
+
+                <div class="empty-state">
+
+                    <div class="empty-state-icon">
+                        …
+                    </div>
+
+                    <strong>
+                        Загружаем задачи
+                    </strong>
+
+                    <span>
+                        Секунду…
+                    </span>
+
+                </div>
+
+            `;
+
+        }
+
+
+        if (allList) {
+
+            allList.innerHTML = `
+
+                <div class="empty-state">
+
+                    <div class="empty-state-icon">
+                        …
+                    </div>
+
+                    <strong>
+                        Загружаем задачи
+                    </strong>
+
+                    <span>
+                        Получаем твой список.
+                    </span>
+
+                </div>
+
+            `;
+
+        }
+
+    }
+
+
+    /* =====================================================
+       TASK RENDER
+    ===================================================== */
+
+    function getTodayTasks() {
+
+        let tasks =
+            state.tasks.filter(
+                task =>
+                    String(task.due_date || "")
+                        .slice(0, 10) ===
+                    state.selectedDate
+            );
+
+
+        if (state.selectedListId) {
+
+            tasks =
+                tasks.filter(
+                    task =>
+                        String(task.list_id) ===
+                        String(state.selectedListId)
+                );
+
+        }
+
+
+        return sortTasks(tasks);
+
     }
 
 
     function sortTasks(tasks) {
 
-        const priorityWeight = {
-            high: 0,
-            medium: 1,
-            low: 2
-        };
+        const list =
+            [...tasks];
 
-        return [...tasks].sort((a, b) => {
 
-            if (a.completed !== b.completed) {
+        if (state.settings.priorityFirst) {
+
+            list.sort(
+                (a, b) =>
+                    priorityWeight(b.priority) -
+                    priorityWeight(a.priority)
+            );
+
+        }
+
+
+        list.sort((a, b) => {
+
+            if (
+                a.completed !==
+                b.completed
+            ) {
+
                 return a.completed ? 1 : -1;
+
             }
 
-            const overdueA = isOverdue(a);
-            const overdueB = isOverdue(b);
+            if (state.taskSort === "priority") {
 
-            if (overdueA !== overdueB) {
-                return overdueA ? -1 : 1;
+                return (
+                    priorityWeight(b.priority) -
+                    priorityWeight(a.priority)
+                );
+
             }
 
-            const priorityA =
-                priorityWeight[a.priority] ?? 1;
 
-            const priorityB =
-                priorityWeight[b.priority] ?? 1;
+            if (state.taskSort === "title") {
 
-            if (priorityA !== priorityB) {
-                return priorityA - priorityB;
+                return String(a.title || "")
+                    .localeCompare(
+                        String(b.title || ""),
+                        "ru"
+                    );
+
             }
 
-            const timeA = a.due_time || "99:99";
-            const timeB = b.due_time || "99:99";
 
-            if (timeA !== timeB) {
-                return timeA.localeCompare(timeB);
+            if (state.taskSort === "created") {
+
+                return String(b.created_at || "")
+                    .localeCompare(
+                        String(a.created_at || "")
+                    );
+
             }
 
-            return String(a.created_at || "")
-                .localeCompare(String(b.created_at || ""));
+
+            const dateA =
+                `${a.due_date || "9999"} ${a.due_time || "99"}`;
+
+            const dateB =
+                `${b.due_date || "9999"} ${b.due_time || "99"}`;
+
+            return dateA.localeCompare(dateB);
+
         });
+
+
+        return list;
+
     }
 
 
-    function getListName(listId) {
+    function taskHtml(task) {
 
-        const list = state.lists.find(
-            item => item.id === listId
-        );
-
-        return list?.name || "";
-    }
+        const list =
+            taskList(task);
 
 
-    function priorityLabel(priority) {
+        const overdue =
+            isOverdue(task);
 
-        if (priority === "high") return "Высокий";
-        if (priority === "low") return "Низкий";
-
-        return "Средний";
-    }
-
-
-    function renderTaskHTML(task, compact = false) {
-
-        const overdue = isOverdue(task);
 
         const priority =
-            task.priority || "medium";
+            task.priority ||
+            "medium";
+
 
         const time =
             task.due_time
                 ? task.due_time.slice(0, 5)
                 : "";
 
-        const listName =
-            getListName(task.list_id);
 
         return `
+
             <article
-                class="${compact ? "selected-day-task" : "task-item"} ${task.completed ? "completed" : ""}"
-                data-task-id="${task.id}"
+                class="task-item ${
+                    task.completed ? "completed" : ""
+                }"
+                data-task-id="${escapeHtml(task.id)}"
             >
 
                 <button
                     class="task-check"
                     data-action="complete"
-                    data-task-id="${task.id}"
+                    data-id="${escapeHtml(task.id)}"
                     type="button"
-                    aria-label="Отметить выполненной"
-                ></button>
+                    aria-label="Выполнить задачу"
+                >
+                    ✓
+                </button>
 
-                <div class="${compact ? "selected-day-task-content" : "task-content"}">
 
-                    <div class="${compact ? "selected-day-task-title" : "task-title"}">
-                        ${escapeHtml(task.title)}
+                <div class="task-content">
+
+                    <div class="task-title-row">
+
+                        <div class="task-title">
+                            ${escapeHtml(task.title)}
+                        </div>
+
                     </div>
 
-                    <div class="${compact ? "selected-day-task-meta" : "task-meta"}">
+
+                    ${
+                        task.description
+                            ? `
+                                <div class="task-description">
+                                    ${escapeHtml(
+                                        task.description
+                                    )}
+                                </div>
+                            `
+                            : ""
+                    }
+
+
+                    <div class="task-meta">
 
                         ${
                             time
-                                ? `<span class="${overdue ? "task-overdue" : "task-time"}">${escapeHtml(time)}</span>`
-                                : ""
-                        }
-
-                        ${
-                            overdue
-                                ? `<span class="task-overdue">Просрочено</span>`
-                                : ""
-                        }
-
-                        ${
-                            !compact
                                 ? `
-                                <span class="task-priority priority-${priority}">
-                                    ${priorityLabel(priority)}
-                                </span>
+                                    <span class="task-time">
+                                        ${escapeHtml(time)}
+                                    </span>
                                 `
                                 : ""
                         }
 
+
                         ${
-                            !compact && listName
+                            list
                                 ? `
-                                <span
-                                    class="task-list-tag"
-                                    style="--task-color:${getListColor(
-                                        state.lists.findIndex(
-                                            item => item.id === task.list_id
-                                        )
-                                    )}"
-                                >
-                                    ${escapeHtml(listName)}
-                                </span>
+                                    <span
+                                        class="task-list-tag"
+                                        style="--task-color:${
+                                            escapeHtml(
+                                                list.color ||
+                                                "#999"
+                                            )
+                                        }"
+                                    >
+                                        ${escapeHtml(list.name)}
+                                    </span>
+                                `
+                                : ""
+                        }
+
+
+                        <span
+                            class="priority-pill ${priority}"
+                        >
+                            ${priorityLabel(priority)}
+                        </span>
+
+
+                        ${
+                            overdue
+                                ? `
+                                    <span class="overdue-pill">
+                                        Просрочено
+                                    </span>
                                 `
                                 : ""
                         }
@@ -850,68 +1073,95 @@
 
                 </div>
 
-                ${
-                    !compact
-                        ? `
-                        <div class="task-actions">
 
-                            <button
-                                class="task-action favorite ${task.is_favorite ? "active" : ""}"
-                                data-action="favorite"
-                                data-task-id="${task.id}"
-                                type="button"
-                                title="Избранное"
-                            >
-                                ${task.is_favorite ? "★" : "☆"}
-                            </button>
+                <div class="task-actions">
 
-                            <button
-                                class="task-action"
-                                data-action="edit"
-                                data-task-id="${task.id}"
-                                type="button"
-                                title="Редактировать"
-                            >
-                                ✎
-                            </button>
+                    <button
+                        class="task-action ${
+                            task.is_favorite
+                                ? "favorite-active"
+                                : ""
+                        }"
+                        data-action="favorite"
+                        data-id="${escapeHtml(task.id)}"
+                        type="button"
+                        title="Избранное"
+                    >
+                        ${
+                            task.is_favorite
+                                ? "★"
+                                : "☆"
+                        }
+                    </button>
 
-                            <button
-                                class="task-action delete"
-                                data-action="delete"
-                                data-task-id="${task.id}"
-                                type="button"
-                                title="Удалить"
-                            >
-                                ×
-                            </button>
 
-                        </div>
-                        `
-                        : ""
-                }
+                    <button
+                        class="task-action"
+                        data-action="edit"
+                        data-id="${escapeHtml(task.id)}"
+                        type="button"
+                        title="Изменить"
+                    >
+                        ✎
+                    </button>
+
+
+                    <button
+                        class="task-action"
+                        data-action="delete"
+                        data-id="${escapeHtml(task.id)}"
+                        type="button"
+                        title="Удалить"
+                    >
+                        ×
+                    </button>
+
+                </div>
 
             </article>
+
         `;
+
     }
 
 
     function renderTodayTasks() {
 
-        const container = $("taskList");
+        const container =
+            $("#taskList");
 
-        if (!container) return;
+        if (!container) {
+            return;
+        }
 
-        let tasks =
-            getTasksForDate(state.selectedDate);
 
-        tasks = sortTasks(tasks);
+        const tasks =
+            getTodayTasks();
+
+
+        const completed =
+            tasks.filter(
+                task => task.completed
+            ).length;
+
+
+        $("#tasksSubtitle").textContent =
+            tasks.length
+                ? `${completed} из ${tasks.length} выполнено`
+                : "На сегодня пока ничего нет";
+
+
+        $("#progressText").textContent =
+            `${completed} из ${tasks.length} выполнено`;
+
 
         if (!tasks.length) {
 
             container.innerHTML = `
+
                 <div class="empty-state">
 
-                    <div class="empty-icon">
+                    <div class="empty-state-icon">
                         ✓
                     </div>
 
@@ -919,2443 +1169,3277 @@
                         День свободен
                     </strong>
 
-                    <p>
-                        Отличный момент, чтобы добавить
-                        первую задачу или просто насладиться
-                        свободным временем.
-                    </p>
-
-                    <button
-                        class="primary-button"
-                        data-empty-action="add"
-                        type="button"
-                    >
-                        + Добавить задачу
-                    </button>
+                    <span>
+                        Добавь первую задачу и начни собирать свой день.
+                    </span>
 
                 </div>
+
             `;
 
-        } else {
+            return;
 
-            container.innerHTML =
-                tasks
-                    .map(task => renderTaskHTML(task))
-                    .join("");
         }
 
-        const completed =
-            tasks.filter(task => task.completed).length;
 
-        $("tasksSubtitle").textContent =
-            `${tasks.length} ${
-                pluralize(tasks.length, "задача", "задачи", "задач")
-            } · ${completed} выполнено`;
-    }
+        container.innerHTML =
+            tasks.map(taskHtml).join("");
 
 
-    function pluralize(number, one, few, many) {
+        renderOverdueMoveButton();
 
-        const n = Math.abs(number) % 100;
-        const n1 = n % 10;
-
-        if (n > 10 && n < 20) return many;
-
-        if (n1 > 1 && n1 < 5) return few;
-
-        if (n1 === 1) return one;
-
-        return many;
     }
 
 
     /* =====================================================
-       ALL TASKS PAGE
-    ====================================================== */
+       ALL TASKS
+    ===================================================== */
 
     function getFilteredAllTasks() {
 
-        let tasks = [...state.tasks];
+        let tasks =
+            [...state.tasks];
 
-        switch (state.activeTaskFilter) {
 
-            case "today":
-                tasks = tasks.filter(
-                    task => task.due_date === getTodayString()
-                );
-                break;
+        if (state.taskFilter === "active") {
 
-            case "open":
-                tasks = tasks.filter(
+            tasks =
+                tasks.filter(
                     task => !task.completed
                 );
-                break;
 
-            case "completed":
-                tasks = tasks.filter(
-                    task => task.completed
-                );
-                break;
-
-            case "overdue":
-                tasks = tasks.filter(
-                    task => isOverdue(task)
-                );
-                break;
-
-            default:
-                break;
         }
 
+
+        if (state.taskFilter === "completed") {
+
+            tasks =
+                tasks.filter(
+                    task => task.completed
+                );
+
+        }
+
+
+        if (state.taskFilter === "overdue") {
+
+            tasks =
+                tasks.filter(
+                    task => isOverdue(task)
+                );
+
+        }
+
+
         return sortTasks(tasks);
+
+    }
+
+
+    function renderAllTasksError(message) {
+
+        const container =
+            $("#allTasksList");
+
+        if (!container) {
+            return;
+        }
+
+
+        container.innerHTML = `
+
+            <div class="empty-state">
+
+                <div class="empty-state-icon">
+                    !
+                </div>
+
+                <strong>
+                    Не удалось загрузить задачи
+                </strong>
+
+                <span>
+                    ${escapeHtml(message)}
+                </span>
+
+            </div>
+
+        `;
+
     }
 
 
     function renderAllTasks() {
 
-        const container = $("allTasksList");
+        const container =
+            $("#allTasksList");
 
-        if (!container) return;
+        if (!container) {
+            return;
+        }
 
-        const tasks = getFilteredAllTasks();
+
+        const tasks =
+            getFilteredAllTasks();
+
 
         if (!tasks.length) {
 
             container.innerHTML = `
-                <div class="card">
-                    <div class="empty-state">
 
-                        <div class="empty-icon">
-                            ✓
-                        </div>
+                <div class="empty-state">
 
-                        <strong>
-                            Здесь пока пусто
-                        </strong>
-
-                        <p>
-                            В этом фильтре нет задач.
-                        </p>
-
-                        <button
-                            class="primary-button"
-                            data-empty-action="add"
-                            type="button"
-                        >
-                            + Создать задачу
-                        </button>
-
+                    <div class="empty-state-icon">
+                        ✓
                     </div>
+
+                    <strong>
+                        Здесь пока пусто
+                    </strong>
+
+                    <span>
+                        Попробуй изменить фильтр или создай новую задачу.
+                    </span>
+
                 </div>
+
             `;
 
             return;
+
         }
 
+
+        const groups = new Map();
+
+
+        tasks.forEach(task => {
+
+            const key =
+                task.due_date
+                    ? String(task.due_date).slice(0, 10)
+                    : "no-date";
+
+
+            if (!groups.has(key)) {
+                groups.set(key, []);
+            }
+
+
+            groups.get(key).push(task);
+
+        });
+
+
+        let html = "";
+
+
+        groups.forEach((items, date) => {
+
+            let heading =
+                "Без даты";
+
+
+            if (date !== "no-date") {
+
+                if (date === dateKey(new Date())) {
+
+                    heading = "Сегодня";
+
+                } else {
+
+                    heading =
+                        formatDateLong(date);
+
+                }
+
+            }
+
+
+            html += `
+
+                <section class="task-day-group">
+
+                    <div class="task-day-heading">
+
+                        <strong>
+                            ${escapeHtml(heading)}
+                        </strong>
+
+                        <span>
+                            ${items.length}
+                            ${items.length === 1 ? "задача" : "задач"}
+                        </span>
+
+                    </div>
+
+                    ${items.map(taskHtml).join("")}
+
+                </section>
+
+            `;
+
+        });
+
+
+        container.innerHTML = html;
+
+    }
+
+
+    function renderFavorites() {
+
+        const container =
+            $("#favoritesList");
+
+        if (!container) {
+            return;
+        }
+
+
+        const tasks =
+            state.tasks.filter(
+                task => task.is_favorite
+            );
+
+
+        if (!tasks.length) {
+
+            container.innerHTML = `
+
+                <div class="empty-state">
+
+                    <div class="empty-state-icon">
+                        ☆
+                    </div>
+
+                    <strong>
+                        Избранное пусто
+                    </strong>
+
+                    <span>
+                        Нажми на ☆ у задачи, чтобы сохранить её здесь.
+                    </span>
+
+                </div>
+
+            `;
+
+            return;
+
+        }
+
+
         container.innerHTML =
-            tasks.map(task => {
+            tasks.map(task => `
 
-                const date =
-                    task.due_date
-                        ? stringToDate(task.due_date)
-                        : null;
+                <section class="task-day-group">
 
-                return `
-                    <article
-                        class="all-task-row"
-                        data-task-id="${task.id}"
-                    >
+                    ${taskHtml(task)}
 
-                        <button
-                            class="task-check"
-                            data-action="complete"
-                            data-task-id="${task.id}"
-                            type="button"
-                        ></button>
+                </section>
 
-                        <div class="all-task-date">
+            `).join("");
 
-                            <strong>
-                                ${date ? date.getDate() : "—"}
-                            </strong>
+    }
 
-                            <span>
-                                ${date ? getWeekdayShort(date) : ""}
-                            </span>
 
-                        </div>
+    function updateTaskBadge() {
 
-                        <div class="all-task-main">
+        const count =
+            state.tasks.filter(
+                task => !task.completed
+            ).length;
 
-                            <div
-                                class="all-task-title ${
-                                    task.completed ? "task-overdue" : ""
-                                }"
-                                style="${
-                                    task.completed
-                                        ? "color:#aaa;text-decoration:line-through"
-                                        : ""
-                                }"
-                            >
-                                ${escapeHtml(task.title)}
-                            </div>
 
-                            ${
-                                task.description
-                                    ? `
-                                    <div class="all-task-description">
-                                        ${escapeHtml(task.description)}
-                                    </div>
-                                    `
-                                    : ""
-                            }
+        $("#taskCountBadge").textContent =
+            count > 99 ? "99+" : count;
 
-                        </div>
-
-                        <div class="all-task-right">
-
-                            ${
-                                task.due_time
-                                    ? `
-                                    <span class="all-task-date-label">
-                                        ${escapeHtml(
-                                            task.due_time.slice(0, 5)
-                                        )}
-                                    </span>
-                                    `
-                                    : ""
-                            }
-
-                            <span class="task-priority priority-${
-                                task.priority || "medium"
-                            }">
-                                ${priorityLabel(task.priority || "medium")}
-                            </span>
-
-                            <button
-                                class="task-action favorite ${
-                                    task.is_favorite ? "active" : ""
-                                }"
-                                data-action="favorite"
-                                data-task-id="${task.id}"
-                                type="button"
-                            >
-                                ${task.is_favorite ? "★" : "☆"}
-                            </button>
-
-                            <button
-                                class="task-action"
-                                data-action="edit"
-                                data-task-id="${task.id}"
-                                type="button"
-                            >
-                                ✎
-                            </button>
-
-                        </div>
-
-                    </article>
-                `;
-
-            }).join("");
     }
 
 
     /* =====================================================
        TASK ACTIONS
-    ====================================================== */
+    ===================================================== */
 
     async function toggleTask(taskId) {
 
         const task =
-            state.tasks.find(item => item.id === taskId);
+            state.tasks.find(
+                item =>
+                    String(item.id) ===
+                    String(taskId)
+            );
 
-        if (!task) return;
 
-        if (state.updatingTaskIds.has(taskId)) {
+        if (!task) {
             return;
         }
 
-        state.updatingTaskIds.add(taskId);
 
-        const oldValue = task.completed;
+        if (state.updatingTasks.has(taskId)) {
+            return;
+        }
 
-        task.completed = !oldValue;
 
-        refreshVisibleData();
+        state.updatingTasks.add(taskId);
 
-        const {
-            error
-        } = await supabaseClient
-            .from("tasks")
-            .update({
-                completed: task.completed
-            })
-            .eq("id", taskId)
-            .eq("user_id", state.user.id);
 
-        state.updatingTaskIds.delete(taskId);
+        const previous =
+            task.completed;
+
+
+        task.completed =
+            !previous;
+
+
+        renderTodayTasks();
+        renderAllTasks();
+        renderFavorites();
+        updateProgress();
+        updateTaskBadge();
+
+
+        const { error } =
+            await client
+                .from("tasks")
+                .update({
+                    completed: task.completed
+                })
+                .eq("id", task.id)
+                .eq("user_id", state.user.id);
+
+
+        state.updatingTasks.delete(taskId);
+
 
         if (error) {
 
-            task.completed = oldValue;
+            task.completed =
+                previous;
 
-            refreshVisibleData();
+            renderTodayTasks();
+            renderAllTasks();
+            renderFavorites();
+            updateProgress();
+            updateTaskBadge();
 
-            console.error(error);
 
-            showToast(
-                "Не удалось изменить задачу.",
+            toast(
+                friendlyError(error),
                 "error"
             );
 
             return;
+
         }
 
-        showToast(
+
+        toast(
             task.completed
                 ? "Задача выполнена ✓"
-                : "Задача снова активна"
+                : "Задача возвращена в план"
         );
 
-        renderProgress();
-        renderWeeklyStats();
+
+        renderStats();
+
     }
 
 
     async function toggleFavorite(taskId) {
 
         const task =
-            state.tasks.find(item => item.id === taskId);
+            state.tasks.find(
+                item =>
+                    String(item.id) ===
+                    String(taskId)
+            );
 
-        if (!task) return;
 
-        const newValue = !Boolean(task.is_favorite);
+        if (!task) {
+            return;
+        }
 
-        task.is_favorite = newValue;
 
-        refreshVisibleData();
+        const next =
+            !Boolean(task.is_favorite);
 
-        const {
-            error
-        } = await supabaseClient
-            .from("tasks")
-            .update({
-                is_favorite: newValue
-            })
-            .eq("id", taskId)
-            .eq("user_id", state.user.id);
+
+        const { error } =
+            await client
+                .from("tasks")
+                .update({
+                    is_favorite: next
+                })
+                .eq("id", task.id)
+                .eq("user_id", state.user.id);
+
 
         if (error) {
 
-            task.is_favorite = !newValue;
-
-            refreshVisibleData();
-
-            showToast(
-                "Не удалось изменить избранное.",
+            toast(
+                friendlyError(error),
                 "error"
             );
 
             return;
+
         }
 
-        showToast(
-            newValue
+
+        task.is_favorite = next;
+
+
+        renderTodayTasks();
+        renderAllTasks();
+        renderFavorites();
+
+
+        toast(
+            next
                 ? "Добавлено в избранное"
-                : "Убрано из избранного"
+                : "Удалено из избранного"
         );
+
     }
 
 
     async function deleteTask(taskId) {
 
         const task =
-            state.tasks.find(item => item.id === taskId);
-
-        if (!task) return;
-
-        const confirmed =
-            window.confirm(
-                `Удалить задачу «${task.title}»?`
+            state.tasks.find(
+                item =>
+                    String(item.id) ===
+                    String(taskId)
             );
 
-        if (!confirmed) return;
 
-        const {
-            error
-        } = await supabaseClient
-            .from("tasks")
-            .delete()
-            .eq("id", taskId)
-            .eq("user_id", state.user.id);
+        if (!task) {
+            return;
+        }
+
+
+        if (
+            !window.confirm(
+                `Удалить задачу «${task.title}»?`
+            )
+        ) {
+            return;
+        }
+
+
+        const { error } =
+            await client
+                .from("tasks")
+                .delete()
+                .eq("id", task.id)
+                .eq("user_id", state.user.id);
+
 
         if (error) {
 
-            console.error(error);
-
-            showToast(
-                "Не удалось удалить задачу.",
+            toast(
+                friendlyError(error),
                 "error"
             );
 
             return;
+
         }
+
 
         state.tasks =
             state.tasks.filter(
-                item => item.id !== taskId
+                item =>
+                    String(item.id) !==
+                    String(task.id)
             );
 
-        refreshVisibleData();
 
-        showToast("Задача удалена");
+        renderTodayTasks();
+        renderAllTasks();
+        renderFavorites();
+        renderCalendar();
+        updateProgress();
+        updateTaskBadge();
+        renderStats();
+
+
+        toast("Задача удалена.");
+
     }
 
 
     /* =====================================================
        TASK MODAL
-    ====================================================== */
+    ===================================================== */
 
-    function openTaskModal(task = null, date = null) {
+    function openTaskModal(task = null) {
 
         state.editingTaskId =
             task?.id || null;
 
-        $("taskModalTitle").textContent =
+
+        $("#taskModalTitle").textContent =
             task
-                ? "Редактировать задачу"
+                ? "Изменить задачу"
                 : "Новая задача";
 
-        $("taskSubmitButton").textContent =
+
+        $("#taskSubmitButton").textContent =
             task
                 ? "Сохранить изменения"
                 : "Создать задачу";
 
-        $("taskTitle").value =
+
+        $("#taskTitle").value =
             task?.title || "";
 
-        $("taskDescription").value =
+
+        $("#taskDescription").value =
             task?.description || "";
 
-        $("taskDate").value =
-            task?.due_date ||
-            date ||
-            state.selectedDate ||
-            getTodayString();
 
-        $("taskTime").value =
+        $("#taskDate").value =
+            task?.due_date
+                ? String(task.due_date).slice(0, 10)
+                : state.selectedDate;
+
+
+        $("#taskTime").value =
             task?.due_time
-                ? task.due_time.slice(0, 5)
+                ? String(task.due_time).slice(0, 5)
                 : "";
 
-        $("taskPriority").value =
+
+        $("#taskPriority").value =
             task?.priority || "medium";
 
-        renderTaskListSelect();
 
-        $("taskListSelect").value =
-            task?.list_id || "";
+        if (task?.list_id) {
 
-        taskModal.classList.remove("hidden");
+            $("#taskListSelect").value =
+                task.list_id;
+
+        } else if (state.lists[0]) {
+
+            $("#taskListSelect").value =
+                state.lists[0].id;
+
+        }
+
+
+        openModal("#taskModal");
+
 
         setTimeout(() => {
-            $("taskTitle").focus();
+
+            $("#taskTitle")?.focus();
+
         }, 50);
+
     }
 
 
-    function closeTaskModal() {
-
-        taskModal.classList.add("hidden");
-
-        state.editingTaskId = null;
-
-        taskForm.reset();
-
-        $("taskDate").value =
-            state.selectedDate ||
-            getTodayString();
-
-        $("taskPriority").value = "medium";
-    }
-
-
-    async function submitTask(event) {
-
-        event.preventDefault();
-
-        if (!state.user) return;
+    async function saveTask(form) {
 
         const title =
-            $("taskTitle").value.trim();
+            $("#taskTitle").value.trim();
 
-        if (!title) return;
+
+        if (!title) {
+            return;
+        }
+
 
         const payload = {
+
+            user_id: state.user.id,
+
             title,
+
             description:
-                $("taskDescription").value.trim() || null,
+                $("#taskDescription")
+                    .value
+                    .trim() || null,
+
             due_date:
-                $("taskDate").value,
+                $("#taskDate").value || null,
+
             due_time:
-                $("taskTime").value || null,
+                $("#taskTime").value || null,
+
             priority:
-                $("taskPriority").value || "medium",
+                $("#taskPriority").value || "medium",
+
             list_id:
-                $("taskListSelect").value || null
+                $("#taskListSelect").value || null
+
         };
 
 
         if (state.editingTaskId) {
 
-            const {
-                data,
-                error
-            } = await supabaseClient
-                .from("tasks")
-                .update(payload)
-                .eq("id", state.editingTaskId)
-                .eq("user_id", state.user.id)
-                .select()
-                .single();
+            const { error } =
+                await client
+                    .from("tasks")
+                    .update(payload)
+                    .eq("id", state.editingTaskId)
+                    .eq("user_id", state.user.id);
+
 
             if (error) {
 
-                console.error(error);
-
-                showToast(
-                    "Не удалось сохранить задачу.",
+                toast(
+                    friendlyError(error),
                     "error"
                 );
 
                 return;
+
             }
 
-            const index =
-                state.tasks.findIndex(
-                    item => item.id === state.editingTaskId
-                );
 
-            if (index !== -1) {
-                state.tasks[index] = data;
-            }
-
-            showToast("Задача обновлена");
+            toast("Задача обновлена.");
 
         } else {
 
-            const {
-                data,
-                error
-            } = await supabaseClient
-                .from("tasks")
-                .insert({
-                    ...payload,
-                    user_id: state.user.id,
-                    completed: false,
-                    is_favorite: false
-                })
-                .select()
-                .single();
+            const { error } =
+                await client
+                    .from("tasks")
+                    .insert({
+                        ...payload,
+                        completed: false,
+                        is_favorite: false
+                    });
+
 
             if (error) {
 
-                console.error(error);
-
-                showToast(
-                    "Не удалось создать задачу.",
+                toast(
+                    friendlyError(error),
                     "error"
                 );
 
                 return;
+
             }
 
-            state.tasks.push(data);
 
-            showToast("Задача создана ✓");
+            toast("Задача создана ✓");
+
         }
 
-        state.selectedDate =
-            payload.due_date || state.selectedDate;
 
-        closeTaskModal();
+        closeModal("#taskModal");
 
-        refreshVisibleData();
+        state.editingTaskId = null;
+
+        await loadTasks();
+
     }
 
 
     /* =====================================================
-       CALENDAR
-    ====================================================== */
+       OVERDUE
+    ===================================================== */
 
-    function renderCalendar() {
+    function renderOverdueMoveButton() {
 
-        const title = $("calendarTitle");
+        const button =
+            $("#moveOverdueButton");
 
-        const grid = $("calendarFullDays");
-
-        if (!title || !grid) return;
-
-        title.textContent =
-            capitalize(
-                getMonthName(state.calendarDate)
-            );
-
-        const year =
-            state.calendarDate.getFullYear();
-
-        const month =
-            state.calendarDate.getMonth();
-
-        const firstDay =
-            new Date(year, month, 1);
-
-        let start =
-            firstDay.getDay();
-
-        start =
-            start === 0 ? 6 : start - 1;
-
-        const daysInMonth =
-            new Date(year, month + 1, 0).getDate();
-
-        const prevDays =
-            new Date(year, month, 0).getDate();
-
-        const cells = [];
-
-        for (let i = start - 1; i >= 0; i--) {
-
-            const date =
-                new Date(year, month - 1, prevDays - i);
-
-            cells.push({
-                date,
-                outside: true
-            });
-        }
-
-        for (let day = 1; day <= daysInMonth; day++) {
-
-            cells.push({
-                date: new Date(year, month, day),
-                outside: false
-            });
-        }
-
-        while (cells.length % 7 !== 0) {
-
-            const last =
-                cells[cells.length - 1].date;
-
-            const next =
-                new Date(
-                    last.getFullYear(),
-                    last.getMonth(),
-                    last.getDate() + 1
-                );
-
-            cells.push({
-                date: next,
-                outside: true
-            });
-        }
-
-        grid.innerHTML =
-            cells.map(renderCalendarDay).join("");
-
-        renderSelectedDayPanel();
-    }
-
-
-    function renderCalendarDay(item) {
-
-        const dateString =
-            dateToString(item.date);
-
-        const tasks =
-            state.tasks.filter(
-                task => task.due_date === dateString
-            );
-
-        const selected =
-            dateString === state.selectedDate;
-
-        const today =
-            isToday(dateString);
-
-        const visible =
-            tasks.slice(0, 3);
-
-        return `
-            <div
-                class="calendar-day
-                    ${item.outside ? "outside" : ""}
-                    ${selected ? "selected" : ""}
-                    ${today ? "today" : ""}"
-                data-calendar-date="${dateString}"
-            >
-
-                <div class="calendar-day-number">
-                    ${item.date.getDate()}
-                </div>
-
-                ${
-                    visible
-                        .map(task => `
-                            <div
-                                class="calendar-task ${
-                                    task.completed ? "completed" : ""
-                                }"
-                            >
-                                <span class="calendar-task-dot"></span>
-
-                                <span>
-                                    ${escapeHtml(task.title)}
-                                </span>
-                            </div>
-                        `)
-                        .join("")
-                }
-
-                ${
-                    tasks.length > 3
-                        ? `
-                            <div class="calendar-more">
-                                +${tasks.length - 3} ещё
-                            </div>
-                        `
-                        : ""
-                }
-
-            </div>
-        `;
-    }
-
-
-    function renderSelectedDayPanel() {
-
-        const title =
-            $("selectedDateTitle");
-
-        const subtitle =
-            $("selectedDateSubtitle");
-
-        const container =
-            $("selectedDayTasks");
-
-        const tasks =
-            sortTasks(
-                state.tasks.filter(
-                    task =>
-                        task.due_date === state.selectedDate
-                )
-            );
-
-        title.textContent =
-            isToday(state.selectedDate)
-                ? "Сегодня"
-                : capitalize(
-                    new Intl.DateTimeFormat("ru-RU", {
-                        day: "numeric",
-                        month: "long"
-                    }).format(
-                        stringToDate(state.selectedDate)
-                    )
-                );
-
-        subtitle.textContent =
-            `${tasks.length} ${
-                pluralize(
-                    tasks.length,
-                    "задача",
-                    "задачи",
-                    "задач"
-                )
-            }`;
-
-        if (!tasks.length) {
-
-            container.innerHTML = `
-                <div class="empty-state">
-                    <div class="empty-icon">
-                        +
-                    </div>
-
-                    <strong>
-                        День свободен
-                    </strong>
-
-                    <p>
-                        Добавь сюда задачу и
-                        увидишь её прямо в календаре.
-                    </p>
-                </div>
-            `;
-
+        if (!button) {
             return;
         }
 
-        container.innerHTML =
-            tasks
-                .map(task => renderTaskHTML(task, true))
-                .join("");
-    }
 
-
-    function changeMonth(offset) {
-
-        state.calendarDate =
-            new Date(
-                state.calendarDate.getFullYear(),
-                state.calendarDate.getMonth() + offset,
-                1
+        const overdue =
+            state.tasks.filter(
+                task =>
+                    isOverdue(task)
             );
 
-        renderCalendar();
+
+        button.classList.toggle(
+            "hidden",
+            overdue.length === 0
+        );
+
+
+        if (overdue.length) {
+
+            button.textContent =
+                `Перенести ${overdue.length} ${
+                    overdue.length === 1
+                        ? "задачу"
+                        : "задач"
+                } на сегодня`;
+
+        }
+
     }
 
 
-    function goCalendarToday() {
+    async function moveOverdueToToday() {
 
-        state.calendarDate = new Date();
-
-        state.selectedDate =
-            getTodayString();
-
-        renderCalendar();
-    }
-
-
-    function selectCalendarDate(date) {
-
-        state.selectedDate = date;
-
-        const selected =
-            stringToDate(date);
-
-        state.calendarDate =
-            new Date(
-                selected.getFullYear(),
-                selected.getMonth(),
-                1
+        const overdue =
+            state.tasks.filter(
+                task =>
+                    isOverdue(task)
             );
 
+
+        if (!overdue.length) {
+            return;
+        }
+
+
+        const ids =
+            overdue.map(task => task.id);
+
+
+        const { error } =
+            await client
+                .from("tasks")
+                .update({
+                    due_date: dateKey(new Date())
+                })
+                .in("id", ids)
+                .eq("user_id", state.user.id);
+
+
+        if (error) {
+
+            toast(
+                friendlyError(error),
+                "error"
+            );
+
+            return;
+
+        }
+
+
+        overdue.forEach(task => {
+
+            task.due_date =
+                dateKey(new Date());
+
+        });
+
+
+        renderTodayTasks();
+        renderAllTasks();
         renderCalendar();
-
-        updateBreadcrumb();
-    }
+        updateProgress();
 
 
-    function capitalize(value) {
+        toast(
+            `Перенесено задач: ${overdue.length}`
+        );
 
-        if (!value) return value;
-
-        return value.charAt(0).toUpperCase() +
-            value.slice(1);
     }
 
 
     /* =====================================================
        NOTES
-    ====================================================== */
+    ===================================================== */
 
-    function noteStorageKey(date) {
+    function noteCacheKey(date) {
 
-        return `daily_note_${state.user?.id || "guest"}_${date}`;
+        return `daily_note_${state.user.id}_${date}`;
+
     }
 
 
-    function loadLocalNote(date) {
+    function setNoteStatus(
+        text,
+        type = ""
+    ) {
 
-        try {
-            return localStorage.getItem(
-                noteStorageKey(date)
-            ) || "";
-        } catch {
-            return "";
+        const element =
+            $("#noteStatus");
+
+        if (!element) {
+            return;
         }
-    }
 
 
-    function saveLocalNote(date, content) {
+        element.textContent =
+            text;
 
-        try {
 
-            localStorage.setItem(
-                noteStorageKey(date),
-                content
-            );
+        element.classList.remove(
+            "saved",
+            "error"
+        );
 
-        } catch (error) {
-            console.warn("Local note:", error);
+
+        if (type) {
+            element.classList.add(type);
         }
+
     }
 
 
-    async function loadNote() {
+    async function loadNote(date) {
 
-        const input =
-            $("noteInput");
+        if (!state.user) {
+            return;
+        }
 
-        const status =
-            $("noteStatus");
 
-        if (!input || !state.user) return;
+        state.noteDate = date;
+
 
         if (state.noteTimer) {
-            clearTimeout(state.noteTimer);
+
+            clearTimeout(
+                state.noteTimer
+            );
+
+            state.noteTimer = null;
+
         }
 
-        status.textContent = "Загрузка...";
-        status.className = "save-status";
 
-        const local =
-            loadLocalNote(state.selectedDate);
+        const textarea =
+            $("#noteInput");
 
-        input.value = local;
 
-        const {
-            data,
-            error
-        } = await supabaseClient
-            .from("notes")
-            .select("*")
-            .eq("user_id", state.user.id)
-            .eq("date", state.selectedDate)
-            .maybeSingle();
+        if (!textarea) {
+            return;
+        }
+
+
+        textarea.value = "";
+
+
+        const cached =
+            localStorage.getItem(
+                noteCacheKey(date)
+            );
+
+
+        if (cached !== null) {
+
+            textarea.value =
+                cached;
+
+        }
+
+
+        setNoteStatus(
+            cached
+                ? "Локально сохранено"
+                : "Не сохранено"
+        );
+
+
+        const { data, error } =
+            await client
+                .from("notes")
+                .select("content")
+                .eq("user_id", state.user.id)
+                .eq("date", date)
+                .maybeSingle();
+
 
         if (!error && data) {
 
-            input.value =
+            textarea.value =
                 data.content || "";
 
-            saveLocalNote(
-                state.selectedDate,
-                input.value
+
+            localStorage.setItem(
+                noteCacheKey(date),
+                data.content || ""
             );
 
-            status.textContent = "Сохранено";
-            status.className =
-                "save-status saved";
+
+            setNoteStatus(
+                data.content
+                    ? "Сохранено"
+                    : "Пусто",
+                data.content
+                    ? "saved"
+                    : ""
+            );
 
             return;
+
         }
+
 
         if (error) {
 
-            console.warn("Note load:", error);
+            console.warn(
+                "Не удалось загрузить заметку:",
+                error
+            );
 
-            status.textContent =
-                local
-                    ? "Локальная копия"
-                    : "Новая заметка";
 
-            return;
+            if (cached !== null) {
+
+                setNoteStatus(
+                    "Локальная копия",
+                    ""
+                );
+
+            } else {
+
+                setNoteStatus(
+                    "Ожидает сохранения",
+                    "error"
+                );
+
+            }
+
         }
 
-        status.textContent =
-            local
-                ? "Локальная копия"
-                : "Автосохранение";
     }
 
 
-    async function saveNote(showMessage = false) {
+    async function saveNote() {
 
-        if (!state.user) return;
-
-        const input =
-            $("noteInput");
-
-        const status =
-            $("noteStatus");
-
-        if (!input) return;
-
-        const content =
-            input.value;
-
-        saveLocalNote(
-            state.selectedDate,
-            content
-        );
-
-        status.textContent =
-            "Сохраняем...";
-
-        status.className =
-            "save-status";
-
-
-        const {
-            error
-        } = await supabaseClient
-            .from("notes")
-            .upsert(
-                {
-                    user_id: state.user.id,
-                    date: state.selectedDate,
-                    content
-                },
-                {
-                    onConflict: "user_id,date"
-                }
-            );
-
-        if (error) {
-
-            console.error("Note save:", error);
-
-            status.textContent =
-                "Сохранено локально";
-
-            status.className =
-                "save-status error";
-
-            if (showMessage) {
-                showToast(
-                    "Сервер недоступен — заметка сохранена локально.",
-                    "error"
-                );
-            }
-
+        if (!state.user) {
             return;
         }
 
-        status.textContent =
-            "Сохранено";
 
-        status.className =
-            "save-status saved";
+        const date =
+            state.noteDate ||
+            state.selectedDate;
 
-        if (showMessage) {
-            showToast("Заметка сохранена");
+
+        const content =
+            $("#noteInput")
+                .value;
+
+
+        localStorage.setItem(
+            noteCacheKey(date),
+            content
+        );
+
+
+        setNoteStatus(
+            "Сохраняем…"
+        );
+
+
+        const { error } =
+            await client
+                .from("notes")
+                .upsert(
+                    {
+                        user_id: state.user.id,
+                        date,
+                        content
+                    },
+                    {
+                        onConflict:
+                            "user_id,date"
+                    }
+                );
+
+
+        if (error) {
+
+            console.error(
+                "Ошибка сохранения заметки:",
+                error
+            );
+
+
+            setNoteStatus(
+                "Локально сохранено",
+                "error"
+            );
+
+
+            toast(
+                "Заметка сохранена локально. Supabase не принял запись.",
+                "error"
+            );
+
+            return;
+
         }
+
+
+        setNoteStatus(
+            "Сохранено",
+            "saved"
+        );
+
     }
 
 
     function scheduleNoteSave() {
 
-        if (!state.autosaveNotes) {
+        if (!state.settings.autosave) {
             return;
         }
 
+
         if (state.noteTimer) {
-            clearTimeout(state.noteTimer);
+
+            clearTimeout(
+                state.noteTimer
+            );
+
         }
 
-        const status =
-            $("noteStatus");
 
-        status.textContent =
-            "Автосохранение...";
+        const content =
+            $("#noteInput").value;
 
-        status.className =
-            "save-status";
+
+        localStorage.setItem(
+            noteCacheKey(
+                state.noteDate ||
+                state.selectedDate
+            ),
+            content
+        );
+
+
+        setNoteStatus(
+            "Автосохранение…"
+        );
+
 
         state.noteTimer =
-            setTimeout(() => {
+            setTimeout(
+                saveNote,
+                1000
+            );
 
-                saveNote(false);
-
-            }, 900);
     }
 
 
     /* =====================================================
        PROGRESS
-    ====================================================== */
+    ===================================================== */
 
-    function renderProgress() {
+    function updateProgress() {
 
         const tasks =
-            getTasksForDate(state.selectedDate);
+            getTodayTasks();
+
+
+        const total =
+            tasks.length;
+
 
         const completed =
             tasks.filter(
                 task => task.completed
             ).length;
 
+
         const percent =
-            tasks.length
+            total
                 ? Math.round(
-                    completed / tasks.length * 100
+                    completed / total * 100
                 )
                 : 0;
 
-        $("progressPercent").textContent =
+
+        $("#progressPercent").textContent =
             `${percent}%`;
 
-        const ring =
-            $("progressRing");
 
-        const circumference = 264;
+        const circle =
+            $("#progressCircle");
 
-        ring.style.strokeDashoffset =
-            circumference -
-            circumference * percent / 100;
+
+        if (circle) {
+
+            const circumference =
+                2 * Math.PI * 43;
+
+
+            circle.style.strokeDasharray =
+                circumference;
+
+
+            circle.style.strokeDashoffset =
+                circumference -
+                (
+                    circumference *
+                    percent /
+                    100
+                );
+
+        }
+
+
+        $("#progressText").textContent =
+            `${completed} из ${total} выполнено`;
+
     }
 
 
     /* =====================================================
-       WEEKLY STATS
-    ====================================================== */
+       CALENDAR
+    ===================================================== */
 
-    function renderWeeklyStats() {
+    function getCalendarCells() {
+
+        const year =
+            state.calendarMonth.getFullYear();
+
+
+        const month =
+            state.calendarMonth.getMonth();
+
+
+        const firstDay =
+            new Date(
+                year,
+                month,
+                1
+            );
+
+
+        let start =
+            firstDay.getDay();
+
+
+        if (start === 0) {
+            start = 7;
+        }
+
+
+        start -= 1;
+
+
+        const daysInMonth =
+            new Date(
+                year,
+                month + 1,
+                0
+            ).getDate();
+
+
+        const previousDays =
+            new Date(
+                year,
+                month,
+                0
+            ).getDate();
+
+
+        const cells = [];
+
+
+        for (
+            let i = start - 1;
+            i >= 0;
+            i--
+        ) {
+
+            cells.push({
+                date: new Date(
+                    year,
+                    month - 1,
+                    previousDays - i
+                ),
+                other: true
+            });
+
+        }
+
+
+        for (
+            let day = 1;
+            day <= daysInMonth;
+            day++
+        ) {
+
+            cells.push({
+                date: new Date(
+                    year,
+                    month,
+                    day
+                ),
+                other: false
+            });
+
+        }
+
+
+        while (
+            cells.length < 42
+        ) {
+
+            const index =
+                cells.length -
+                (
+                    start +
+                    daysInMonth
+                ) +
+                1;
+
+
+            cells.push({
+                date: new Date(
+                    year,
+                    month + 1,
+                    index
+                ),
+                other: true
+            });
+
+        }
+
+
+        return cells;
+
+    }
+
+
+    function tasksForDate(date) {
+
+        const key =
+            dateKey(date);
+
+
+        return state.tasks.filter(
+            task =>
+                String(task.due_date || "")
+                    .slice(0, 10) === key
+        );
+
+    }
+
+
+    function renderCalendar() {
+
+        renderMiniCalendar();
+
+        renderFullCalendar();
+
+        renderSelectedDateTasks();
+
+    }
+
+
+    function renderMiniCalendar() {
+
+        const container =
+            $("#calendarDays");
+
+
+        if (!container) {
+            return;
+        }
+
+
+        $("#calendarTitle").textContent =
+            monthName(
+                state.calendarMonth
+            );
+
+
+        container.innerHTML =
+            getCalendarCells()
+                .map(cell => {
+
+                    const key =
+                        dateKey(cell.date);
+
+
+                    const tasks =
+                        tasksForDate(
+                            cell.date
+                        );
+
+
+                    const selected =
+                        key ===
+                        state.selectedDate;
+
+
+                    const today =
+                        key ===
+                        dateKey(new Date());
+
+
+                    return `
+
+                        <button
+                            type="button"
+                            class="
+                                calendar-day
+                                ${cell.other ? "other-month" : ""}
+                                ${selected ? "selected" : ""}
+                                ${today ? "today" : ""}
+                            "
+                            data-calendar-date="${key}"
+                        >
+
+                            ${cell.date.getDate()}
+
+                            ${
+                                tasks.length
+                                    ? `
+                                        <span
+                                            class="calendar-dot"
+                                        ></span>
+                                    `
+                                    : ""
+                            }
+
+                        </button>
+
+                    `;
+
+                })
+                .join("");
+
+    }
+
+
+    function renderFullCalendar() {
+
+        const container =
+            $("#fullCalendarDays");
+
+
+        if (!container) {
+            return;
+        }
+
+
+        $("#fullCalendarTitle").textContent =
+            monthName(
+                state.calendarMonth
+            );
+
+
+        const monthTasks =
+            state.tasks.filter(
+                task => {
+
+                    if (!task.due_date) {
+                        return false;
+                    }
+
+
+                    const date =
+                        parseDate(task.due_date);
+
+
+                    return (
+                        date &&
+                        date.getFullYear() ===
+                            state.calendarMonth.getFullYear() &&
+                        date.getMonth() ===
+                            state.calendarMonth.getMonth()
+                    );
+
+                }
+            );
+
+
+        $("#calendarMonthTaskCount").textContent =
+            `${monthTasks.length} ${
+                monthTasks.length === 1
+                    ? "задача"
+                    : "задач"
+            }`;
+
+
+        container.innerHTML =
+            getCalendarCells()
+                .map(cell => {
+
+                    const key =
+                        dateKey(cell.date);
+
+
+                    const tasks =
+                        tasksForDate(
+                            cell.date
+                        );
+
+
+                    const selected =
+                        key ===
+                        state.selectedDate;
+
+
+                    const today =
+                        key ===
+                        dateKey(new Date());
+
+
+                    const visible =
+                        tasks.slice(0, 4);
+
+
+                    return `
+
+                        <button
+                            type="button"
+                            class="
+                                full-calendar-cell
+                                ${cell.other ? "other-month" : ""}
+                                ${selected ? "selected" : ""}
+                                ${today ? "today" : ""}
+                            "
+                            data-calendar-date="${key}"
+                        >
+
+                            <span class="full-day-number">
+                                ${cell.date.getDate()}
+                            </span>
+
+
+                            <span class="full-calendar-tasks">
+
+                                ${visible.map(task => `
+
+                                    <span
+                                        class="
+                                            calendar-task-chip
+                                            ${task.completed ? "completed" : ""}
+                                            ${task.priority || "medium"}
+                                        "
+                                    >
+                                        ${escapeHtml(task.title)}
+                                    </span>
+
+                                `).join("")}
+
+
+                                ${
+                                    tasks.length > 4
+                                        ? `
+                                            <span class="more-task-chip">
+                                                +${tasks.length - 4}
+                                                ещё
+                                            </span>
+                                        `
+                                        : ""
+                                }
+
+                            </span>
+
+                        </button>
+
+                    `;
+
+                })
+                .join("");
+
+    }
+
+
+    function renderSelectedDateTasks() {
+
+        const container =
+            $("#selectedDateTasks");
+
+
+        if (!container) {
+            return;
+        }
+
+
+        $("#selectedDateTitle").textContent =
+            isToday(state.selectedDate)
+                ? "Сегодня"
+                : formatDateLong(
+                    state.selectedDate
+                );
+
+
+        const tasks =
+            tasksForDate(
+                parseDate(
+                    state.selectedDate
+                )
+            );
+
+
+        if (!tasks.length) {
+
+            container.innerHTML = `
+
+                <div class="empty-state">
+
+                    <div class="empty-state-icon">
+                        +
+                    </div>
+
+                    <strong>
+                        В этот день нет задач
+                    </strong>
+
+                    <span>
+                        Нажми «Добавить задачу», чтобы запланировать что-нибудь.
+                    </span>
+
+                </div>
+
+            `;
+
+            return;
+
+        }
+
+
+        container.innerHTML =
+            sortTasks(tasks)
+                .map(taskHtml)
+                .join("");
+
+    }
+
+
+    function changeCalendarMonth(offset) {
+
+        state.calendarMonth =
+            new Date(
+                state.calendarMonth.getFullYear(),
+                state.calendarMonth.getMonth() + offset,
+                1
+            );
+
+
+        renderCalendar();
+
+    }
+
+
+    function selectCalendarDate(value) {
+
+        state.selectedDate =
+            value;
+
+
+        const date =
+            parseDate(value);
+
+
+        state.calendarMonth =
+            new Date(
+                date.getFullYear(),
+                date.getMonth(),
+                1
+            );
+
+
+        renderCalendar();
+
+        loadNote(value);
+
+    }
+
+
+    /* =====================================================
+       STATS
+    ===================================================== */
+
+    function renderStats() {
 
         const today =
-            stringToDate(getTodayString());
+            new Date();
+
 
         const monday =
             new Date(today);
 
+
         const day =
             monday.getDay();
 
+
         const diff =
-            day === 0 ? -6 : 1 - day;
+            day === 0
+                ? 6
+                : day - 1;
+
 
         monday.setDate(
-            monday.getDate() + diff
+            monday.getDate() - diff
         );
 
-        let totalCompleted = 0;
 
         const values = [];
 
-        for (let i = 0; i < 7; i++) {
+
+        for (
+            let i = 0;
+            i < 7;
+            i++
+        ) {
 
             const date =
                 new Date(monday);
+
 
             date.setDate(
                 monday.getDate() + i
             );
 
+
             const key =
-                dateToString(date);
+                dateKey(date);
 
-            const tasks =
+
+            const count =
                 state.tasks.filter(
-                    task => task.due_date === key
-                );
-
-            const completed =
-                tasks.filter(
-                    task => task.completed
+                    task =>
+                        String(task.due_date || "")
+                            .slice(0, 10) === key &&
+                        task.completed
                 ).length;
 
-            totalCompleted += completed;
 
-            values.push({
-                date,
-                completed
-            });
+            values.push(count);
+
         }
 
-        $("weekCompletedCount").textContent =
-            totalCompleted;
+
+        const total =
+            values.reduce(
+                (sum, value) =>
+                    sum + value,
+                0
+            );
+
+
+        $("#weekCompletedCount").textContent =
+            total;
+
 
         const max =
             Math.max(
                 1,
-                ...values.map(item => item.completed)
+                ...values
             );
 
-        $("miniChart").innerHTML =
-            values.map(item => {
 
-                const height =
-                    Math.max(
-                        5,
-                        item.completed / max * 82
-                    );
+        $("#miniChart").innerHTML =
+            values.map(
+                value => `
 
-                return `
                     <div
-                        class="chart-day ${
-                            dateToString(item.date) === getTodayString()
-                                ? "today"
-                                : ""
-                        }"
-                    >
+                        class="
+                            chart-bar
+                            ${value ? "active" : ""}
+                        "
+                        style="
+                            height:${Math.max(
+                                10,
+                                value / max * 100
+                            )}%;
+                        "
+                        title="${value} выполнено"
+                    ></div>
 
-                        <div class="chart-bar-wrap">
+                `
+            ).join("");
 
-                            <div
-                                class="chart-bar"
-                                style="height:${height}px"
-                            ></div>
-
-                        </div>
-
-                        <span class="chart-label">
-                            ${getWeekdayShort(item.date)}
-                        </span>
-
-                    </div>
-                `;
-
-            }).join("");
-    }
-
-
-    /* =====================================================
-       FAVORITES
-    ====================================================== */
-
-    function renderFavorites() {
-
-        const container =
-            $("favoritesList");
-
-        if (!container) return;
-
-        const tasks =
-            sortTasks(
-                state.tasks.filter(
-                    task => task.is_favorite
-                )
-            );
-
-        if (!tasks.length) {
-
-            container.innerHTML = `
-                <div class="card">
-                    <div class="empty-state">
-
-                        <div class="empty-icon">
-                            ☆
-                        </div>
-
-                        <strong>
-                            Избранное пока пустое
-                        </strong>
-
-                        <p>
-                            Нажимай на звёздочку у важных
-                            задач, чтобы собрать их здесь.
-                        </p>
-
-                    </div>
-                </div>
-            `;
-
-            return;
-        }
-
-        container.innerHTML =
-            tasks.map(task => {
-
-                return renderTaskHTML(task);
-
-            }).join("");
     }
 
 
     /* =====================================================
        SEARCH
-    ====================================================== */
+    ===================================================== */
 
     function openSearch() {
 
-        searchModal.classList.remove("hidden");
+        openModal("#searchModal");
 
-        searchInput.value = "";
+        $("#searchInput").value = "";
 
         renderSearchResults("");
 
-        setTimeout(() => {
-            searchInput.focus();
-        }, 50);
-    }
+        setTimeout(
+            () =>
+                $("#searchInput")?.focus(),
+            50
+        );
 
-
-    function closeSearch() {
-
-        searchModal.classList.add("hidden");
     }
 
 
     function renderSearchResults(query) {
 
         const container =
-            $("searchResults");
+            $("#searchResults");
 
-        const normalized =
-            query.trim().toLowerCase();
 
-        if (!normalized) {
+        if (!container) {
+            return;
+        }
+
+
+        const clean =
+            String(query || "")
+                .trim()
+                .toLowerCase();
+
+
+        if (!clean) {
 
             container.innerHTML = `
+
                 <div class="empty-state">
-                    <div class="empty-icon">⌕</div>
+
+                    <div class="empty-state-icon">
+                        ⌕
+                    </div>
 
                     <strong>
-                        Найди что-нибудь
+                        Найди нужную задачу
                     </strong>
 
-                    <p>
-                        Введи название или описание задачи.
-                    </p>
+                    <span>
+                        Введи название, описание или список.
+                    </span>
+
                 </div>
+
             `;
 
             return;
+
         }
+
 
         const results =
             state.tasks.filter(task => {
 
-                const haystack =
+                const list =
+                    taskList(task);
+
+
+                const text =
                     [
                         task.title,
-                        task.description
+                        task.description,
+                        list?.name
                     ]
-                        .filter(Boolean)
-                        .join(" ")
-                        .toLowerCase();
+                    .filter(Boolean)
+                    .join(" ")
+                    .toLowerCase();
 
-                return haystack.includes(normalized);
-            });
+
+                return text.includes(clean);
+
+            })
+            .slice(0, 30);
+
 
         if (!results.length) {
 
             container.innerHTML = `
+
                 <div class="empty-state">
-                    <div class="empty-icon">⌕</div>
+
+                    <div class="empty-state-icon">
+                        ?
+                    </div>
 
                     <strong>
-                        Ничего не нашли
+                        Ничего не найдено
                     </strong>
 
-                    <p>
+                    <span>
                         Попробуй другой запрос.
-                    </p>
+                    </span>
+
                 </div>
+
             `;
 
             return;
+
         }
 
+
         container.innerHTML =
-            results.slice(0, 20).map(task => {
+            results.map(task => `
 
-                return `
-                    <div
-                        class="search-result"
-                        data-search-task="${task.id}"
-                    >
+                <button
+                    type="button"
+                    class="search-result"
+                    data-search-task-id="${escapeHtml(task.id)}"
+                >
 
-                        <div class="search-result-icon">
-                            ${task.completed ? "✓" : "○"}
-                        </div>
+                    <span>
+                        ${task.completed ? "✓" : "○"}
+                    </span>
 
-                        <div class="search-result-main">
+                    <span class="search-result-title">
+                        ${escapeHtml(task.title)}
+                    </span>
 
-                            <strong>
-                                ${escapeHtml(task.title)}
-                            </strong>
+                    <span class="search-result-date">
+                        ${formatDateShort(task.due_date)}
+                    </span>
 
-                            <span>
-                                ${
-                                    task.due_date
-                                        ? formatLongDate(task.due_date)
-                                        : "Без даты"
-                                }
-                            </span>
+                </button>
 
-                        </div>
+            `).join("");
 
-                    </div>
-                `;
-
-            }).join("");
     }
 
 
     /* =====================================================
-       VIEW NAVIGATION
-    ====================================================== */
+       VIEWS
+    ===================================================== */
 
-    function setView(view) {
+    function updateView() {
 
-        state.activeView = view;
+        const views = {
 
-        updateNavigation();
+            today: "#todayView",
 
-        updateBreadcrumb();
+            tasks: "#tasksView",
 
-        refreshVisibleData();
+            calendar: "#calendarView",
 
-        closeMobileSidebar();
-    }
+            favorites: "#favoritesView"
+
+        };
 
 
-    function updateNavigation() {
+        Object.entries(views)
+            .forEach(
+                ([key, selector]) => {
 
-        document
-            .querySelectorAll(".nav-item[data-view]")
+                    $(selector)?.classList.toggle(
+                        "hidden-view",
+                        state.activeView !== key
+                    );
+
+                }
+            );
+
+
+        $$(".nav-item[data-view]")
             .forEach(button => {
 
                 button.classList.toggle(
                     "active",
-                    button.dataset.view === state.activeView
+                    button.dataset.view ===
+                    state.activeView
                 );
+
             });
-    }
 
 
-    function updateBreadcrumb() {
+        const labels = {
 
-        const main =
-            $("breadcrumbMain");
-
-        const sub =
-            $("breadcrumbSub");
-
-        const names = {
             today: [
                 "Сегодня",
                 "Обзор дня"
             ],
+
             tasks: [
                 "Задачи",
                 "Все задачи"
             ],
+
             calendar: [
                 "Календарь",
-                capitalize(
-                    getMonthName(state.calendarDate)
-                )
+                "Планирование"
             ],
+
             favorites: [
                 "Избранное",
-                "Сохранённые задачи"
+                "Сохранённое"
             ],
+
             settings: [
                 "Настройки",
-                "Preferences"
+                "Daily"
             ]
+
         };
 
-        const pair =
-            names[state.activeView] ||
-            names.today;
 
-        main.textContent = pair[0];
-        sub.textContent = pair[1];
-    }
+        const label =
+            labels[state.activeView] ||
+            labels.today;
 
 
-    function refreshVisibleData() {
+        $("#breadcrumbMain").textContent =
+            label[0];
 
-        renderProfile();
 
-        renderTodayTasks();
+        $("#breadcrumbSub").textContent =
+            label[1];
 
-        renderProgress();
 
-        renderWeeklyStats();
+        if (state.activeView === "tasks") {
 
-        renderCalendar();
+            renderAllTasks();
 
-        renderAllTasks();
-
-        renderFavorites();
-
-        if (state.activeView === "today") {
-            loadNote();
         }
+
+
+        if (state.activeView === "calendar") {
+
+            renderCalendar();
+
+        }
+
+
+        if (state.activeView === "favorites") {
+
+            renderFavorites();
+
+        }
+
+
+        closeMobileSidebar();
+
     }
 
 
-    /* =====================================================
-       MOBILE
-    ====================================================== */
+    function navigate(view) {
 
-    function openMobileSidebar() {
+        if (view === "settings") {
 
-        sidebar.classList.add("open");
+            openSettings();
 
-        sidebarOverlay.classList.remove("hidden");
-    }
+            return;
+
+        }
 
 
-    function closeMobileSidebar() {
+        state.activeView =
+            view;
 
-        sidebar.classList.remove("open");
 
-        sidebarOverlay.classList.add("hidden");
+        updateView();
+
     }
 
 
     /* =====================================================
        SETTINGS
-    ====================================================== */
+    ===================================================== */
+
+    function loadSettings() {
+
+        try {
+
+            const raw =
+                localStorage.getItem(
+                    `daily_settings_${state.user.id}`
+                );
+
+
+            if (raw) {
+
+                const parsed =
+                    JSON.parse(raw);
+
+
+                state.settings = {
+                    ...state.settings,
+                    ...parsed
+                };
+
+            }
+
+        } catch {
+
+            // ignore
+
+        }
+
+
+        $("#autosaveToggle").checked =
+            state.settings.autosave;
+
+
+        $("#priorityToggle").checked =
+            state.settings.priorityFirst;
+
+    }
+
+
+    function saveSettings() {
+
+        const name =
+            $("#settingsName")
+                .value
+                .trim();
+
+
+        state.settings.autosave =
+            $("#autosaveToggle").checked;
+
+
+        state.settings.priorityFirst =
+            $("#priorityToggle").checked;
+
+
+        localStorage.setItem(
+            `daily_settings_${state.user.id}`,
+            JSON.stringify(
+                state.settings
+            )
+        );
+
+
+        if (
+            name &&
+            name !== state.profile?.display_name
+        ) {
+
+            updateProfileName(name);
+
+        }
+
+
+        closeModal("#settingsModal");
+
+        renderProfile();
+
+        renderTodayTasks();
+        renderAllTasks();
+
+
+        toast("Настройки сохранены.");
+
+    }
+
+
+    async function updateProfileName(name) {
+
+        const { error } =
+            await client
+                .from("profiles")
+                .update({
+                    display_name: name
+                })
+                .eq("id", state.user.id);
+
+
+        if (!error) {
+
+            state.profile.display_name =
+                name;
+
+        }
+
+    }
+
 
     function openSettings() {
 
-        settingsModal.classList.remove("hidden");
+        $("#settingsName").value =
+            state.profile?.display_name || "";
 
-        updateThemeButton();
-        updateAutosaveButton();
+
+        $("#autosaveToggle").checked =
+            state.settings.autosave;
+
+
+        $("#priorityToggle").checked =
+            state.settings.priorityFirst;
+
+
+        openModal("#settingsModal");
+
     }
 
 
-    function updateThemeButton() {
+    /* =====================================================
+       MODALS
+    ===================================================== */
 
-        $("themeToggle").classList.toggle(
-            "active",
-            document.body.classList.contains("dark")
-        );
-    }
+    function openModal(selector) {
 
-
-    function updateAutosaveButton() {
-
-        $("autosaveToggle").classList.toggle(
-            "active",
-            state.autosaveNotes
-        );
-    }
-
-
-    function toggleTheme() {
-
-        document.body.classList.toggle("dark");
-
-        localStorage.setItem(
-            "daily_theme",
-            document.body.classList.contains("dark")
-                ? "dark"
-                : "light"
+        $(selector)?.classList.remove(
+            "hidden"
         );
 
-        updateThemeButton();
     }
 
 
-    function loadTheme() {
+    function closeModal(selector) {
 
-        const theme =
-            localStorage.getItem("daily_theme");
+        $(selector)?.classList.add(
+            "hidden"
+        );
 
-        if (theme === "dark") {
-            document.body.classList.add("dark");
-        }
     }
 
 
     /* =====================================================
        NOTIFICATIONS
-    ====================================================== */
+    ===================================================== */
 
     function renderNotifications() {
 
         const container =
-            $("notificationContent");
+            $("#notificationContent");
+
 
         const overdue =
             state.tasks.filter(
                 task => isOverdue(task)
             );
 
-        const today =
+
+        const todayIncomplete =
             state.tasks.filter(
                 task =>
-                    task.due_date === getTodayString() &&
+                    isToday(
+                        String(task.due_date || "")
+                            .slice(0, 10)
+                    ) &&
                     !task.completed
             );
 
-        const items = [];
+
+        let items = [];
+
 
         if (overdue.length) {
 
             items.push(`
+
                 <div class="notification-item">
+
                     <strong>
-                        ${overdue.length} просроченных ${
-                            pluralize(
-                                overdue.length,
-                                "задача",
-                                "задачи",
-                                "задач"
-                            )
-                        }
+                        ${overdue.length}
+                        просроченных задач
                     </strong>
 
                     <span>
-                        Возможно, стоит перенести их.
+                        Проверь их в разделе «Задачи».
                     </span>
+
                 </div>
+
             `);
+
         }
 
-        if (today.length) {
+
+        if (todayIncomplete.length) {
 
             items.push(`
+
                 <div class="notification-item">
+
                     <strong>
-                        Сегодня осталось ${today.length}
+                        Сегодня ещё есть планы
                     </strong>
 
                     <span>
-                        Продолжай в том же духе.
+                        Осталось ${todayIncomplete.length}
+                        незавершённых задач.
                     </span>
+
                 </div>
+
             `);
+
         }
+
 
         if (!items.length) {
 
             items.push(`
+
                 <div class="notification-item">
+
                     <strong>
                         Всё спокойно
                     </strong>
 
                     <span>
-                        На данный момент ничего срочного нет.
+                        Никаких срочных уведомлений.
                     </span>
+
                 </div>
+
             `);
+
         }
+
 
         container.innerHTML =
             items.join("");
 
-        $("notificationDot")
+
+        $("#notificationDot")
             .classList.toggle(
                 "hidden",
                 overdue.length === 0
             );
+
     }
 
 
     function toggleNotifications() {
 
         const popover =
-            $("notificationPopover");
+            $("#notificationPopover");
 
-        const willOpen =
-            popover.classList.contains("hidden");
 
-        if (willOpen) {
+        const hidden =
+            popover.classList.contains(
+                "hidden"
+            );
+
+
+        if (hidden) {
+
             renderNotifications();
+
         }
+
 
         popover.classList.toggle(
             "hidden"
         );
+
     }
 
 
     /* =====================================================
-       EVENT DELEGATION
-    ====================================================== */
-
-    document.addEventListener("click", async event => {
-
-        const actionButton =
-            event.target.closest(
-                "[data-action]"
-            );
-
-        if (actionButton) {
-
-            const action =
-                actionButton.dataset.action;
-
-            const taskId =
-                actionButton.dataset.taskId;
-
-            if (action === "complete") {
-                await toggleTask(taskId);
-            }
-
-            if (action === "favorite") {
-                await toggleFavorite(taskId);
-            }
-
-            if (action === "edit") {
-
-                const task =
-                    state.tasks.find(
-                        item => item.id === taskId
-                    );
-
-                if (task) {
-                    openTaskModal(task);
-                }
-            }
-
-            if (action === "delete") {
-                await deleteTask(taskId);
-            }
-
-            return;
-        }
-
-
-        const emptyAction =
-            event.target.closest(
-                "[data-empty-action]"
-            );
-
-        if (emptyAction) {
-
-            if (
-                emptyAction.dataset.emptyAction === "add"
-            ) {
-                openTaskModal();
-            }
-
-            return;
-        }
-
-
-        const calendarDay =
-            event.target.closest(
-                "[data-calendar-date]"
-            );
-
-        if (calendarDay) {
-
-            selectCalendarDate(
-                calendarDay.dataset.calendarDate
-            );
-
-            return;
-        }
-
-
-        const searchTask =
-            event.target.closest(
-                "[data-search-task]"
-            );
-
-        if (searchTask) {
-
-            const task =
-                state.tasks.find(
-                    item =>
-                        item.id === searchTask.dataset.searchTask
-                );
-
-            closeSearch();
-
-            if (task) {
-
-                state.selectedDate =
-                    task.due_date || getTodayString();
-
-                setView("today");
-
-                setTimeout(() => {
-
-                    const row =
-                        document.querySelector(
-                            `[data-task-id="${task.id}"]`
-                        );
-
-                    row?.scrollIntoView({
-                        behavior: "smooth",
-                        block: "center"
-                    });
-
-                }, 100);
-            }
-        }
-    });
-
-
-    /* =====================================================
-       AUTH EVENTS
-    ====================================================== */
-
-    authModeSwitch.addEventListener(
-        "click",
-        () => {
-
-            state.authMode =
-                state.authMode === "login"
-                    ? "register"
-                    : "login";
-
-            updateAuthMode();
-        }
-    );
-
-
-    $("togglePassword").addEventListener(
-        "click",
-        () => {
-
-            const input =
-                $("authPassword");
-
-            input.type =
-                input.type === "password"
-                    ? "text"
-                    : "password";
-        }
-    );
-
-
-    authForm.addEventListener(
-        "submit",
-        async event => {
-
-            event.preventDefault();
-
-            authMessage.textContent = "";
-
-            const email =
-                $("authEmail").value.trim();
-
-            const password =
-                $("authPassword").value;
-
-            const displayName =
-                $("displayName").value.trim();
-
-
-            authSubmitButton.disabled = true;
-
-            authSubmitButton.textContent =
-                "Подождите...";
-
-
-            try {
-
-                if (state.authMode === "login") {
-
-                    const {
-                        error
-                    } =
-                        await supabaseClient.auth.signInWithPassword({
-                            email,
-                            password
-                        });
-
-                    if (error) throw error;
-
-                } else {
-
-                    const {
-                        data,
-                        error
-                    } =
-                        await supabaseClient.auth.signUp({
-                            email,
-                            password,
-                            options: {
-                                data: {
-                                    display_name:
-                                        displayName || "Daily User"
-                                }
-                            }
-                        });
-
-                    if (error) throw error;
-
-                    if (data.user) {
-
-                        state.user = data.user;
-
-                        await createProfileIfNeeded(
-                            displayName
-                        );
-
-                        if (!data.session) {
-
-                            authMessage.textContent =
-                                "Аккаунт создан. Проверь email для подтверждения.";
-                        }
-                    }
-                }
-
-            } catch (error) {
-
-                console.error(error);
-
-                authMessage.textContent =
-                    friendlyAuthError(error);
-
-            } finally {
-
-                authSubmitButton.disabled = false;
-
-                authSubmitButton.textContent =
-                    state.authMode === "login"
-                        ? "Войти"
-                        : "Создать аккаунт";
-            }
-        }
-    );
-
-
-    /* =====================================================
-       TASK EVENTS
-    ====================================================== */
-
-    taskForm.addEventListener(
-        "submit",
-        submitTask
-    );
-
-    $("cancelTaskButton").addEventListener(
-        "click",
-        closeTaskModal
-    );
-
-    $("closeTaskModal").addEventListener(
-        "click",
-        closeTaskModal
-    );
-
-
-    $("newTaskButton").addEventListener(
-        "click",
-        () => openTaskModal()
-    );
-
-    $("topNewTaskButton").addEventListener(
-        "click",
-        () => openTaskModal()
-    );
-
-    $("addTaskButton").addEventListener(
-        "click",
-        () => openTaskModal()
-    );
-
-    $("allTasksNewButton").addEventListener(
-        "click",
-        () => openTaskModal()
-    );
-
-    $("focusTaskButton").addEventListener(
-        "click",
-        () => {
-
-            const tasks =
-                sortTasks(
-                    getTasksForDate(
-                        state.selectedDate
-                    )
-                ).filter(
-                    task => !task.completed
-                );
-
-            if (!tasks.length) {
-
-                openTaskModal();
-
-                return;
-            }
-
-            const task = tasks[0];
-
-            const row =
-                document.querySelector(
-                    `[data-task-id="${task.id}"]`
-                );
-
-            row?.scrollIntoView({
-                behavior: "smooth",
-                block: "center"
-            });
-        }
-    );
-
-
-    /* =====================================================
-       CALENDAR EVENTS
-    ====================================================== */
-
-    $("prevMonthButton").addEventListener(
-        "click",
-        () => changeMonth(-1)
-    );
-
-    $("nextMonthButton").addEventListener(
-        "click",
-        () => changeMonth(1)
-    );
-
-    $("calendarTodayButton").addEventListener(
-        "click",
-        goCalendarToday
-    );
-
-    $("calendarAddTaskButton").addEventListener(
-        "click",
-        () => openTaskModal(
-            null,
-            state.selectedDate
-        )
-    );
-
-
-    /* =====================================================
-       LIST EVENTS
-    ====================================================== */
-
-    $("addListButton").addEventListener(
-        "click",
-        () => {
-
-            listModal.classList.remove("hidden");
-
-            $("listName").focus();
-        }
-    );
-
-    $("closeListModal").addEventListener(
-        "click",
-        () => listModal.classList.add("hidden")
-    );
-
-    $("cancelListButton").addEventListener(
-        "click",
-        () => listModal.classList.add("hidden")
-    );
-
-
-    listForm.addEventListener(
-        "submit",
-        async event => {
-
-            event.preventDefault();
-
-            const name =
-                $("listName").value.trim();
-
-            if (!name || !state.user) return;
-
-            const {
-                data,
-                error
-            } = await supabaseClient
-                .from("lists")
-                .insert({
-                    user_id: state.user.id,
-                    name
-                })
-                .select()
-                .single();
-
-            if (error) {
-
-                console.error(error);
-
-                showToast(
-                    "Не удалось создать список.",
-                    "error"
-                );
-
-                return;
-            }
-
-            state.lists.push(data);
-
-            renderLists();
-            renderTaskListSelect();
-
-            $("listName").value = "";
-
-            listModal.classList.add("hidden");
-
-            showToast("Список создан");
-        }
-    );
-
-
-    /* =====================================================
-       NOTE EVENTS
-    ====================================================== */
-
-    $("noteInput").addEventListener(
-        "input",
-        scheduleNoteSave
-    );
-
-    $("saveNoteButton").addEventListener(
-        "click",
-        () => saveNote(true)
-    );
-
-
-    /* =====================================================
-       FILTERS
-    ====================================================== */
-
-    document
-        .querySelectorAll("[data-task-filter]")
-        .forEach(button => {
-
-            button.addEventListener(
-                "click",
-                () => {
-
-                    document
-                        .querySelectorAll(
-                            "[data-task-filter]"
-                        )
-                        .forEach(item => {
-                            item.classList.remove("active");
-                        });
-
-                    button.classList.add("active");
-
-                    state.activeTaskFilter =
-                        button.dataset.taskFilter;
-
-                    renderAllTasks();
-                }
-            );
-        });
-
-
-    /* =====================================================
-       NAVIGATION
-    ====================================================== */
-
-    document
-        .querySelectorAll(".nav-item[data-view]")
-        .forEach(button => {
-
-            button.addEventListener(
-                "click",
-                () => {
-
-                    const view =
-                        button.dataset.view;
-
-                    if (view === "settings") {
-
-                        openSettings();
-
-                        return;
-                    }
-
-                    setView(view);
-                }
-            );
-        });
-
-
-    /* =====================================================
-       SEARCH
-    ====================================================== */
-
-    $("searchButton").addEventListener(
-        "click",
-        openSearch
-    );
-
-    searchInput.addEventListener(
-        "input",
-        () => renderSearchResults(
-            searchInput.value
-        )
-    );
-
-
-    $("closeSearchModal")?.addEventListener(
-        "click",
-        closeSearch
-    );
-
-
-    /* =====================================================
-       NOTIFICATIONS
-    ====================================================== */
-
-    $("notificationButton").addEventListener(
-        "click",
-        toggleNotifications
-    );
-
-    $("closeNotifications").addEventListener(
-        "click",
-        () => {
-            $("notificationPopover")
-                .classList.add("hidden");
-        }
-    );
-
-
-    /* =====================================================
-       SETTINGS
-    ====================================================== */
-
-    $("closeSettingsModal").addEventListener(
-        "click",
-        () => settingsModal.classList.add("hidden")
-    );
-
-    $("themeToggle").addEventListener(
-        "click",
-        toggleTheme
-    );
-
-    $("autosaveToggle").addEventListener(
-        "click",
-        () => {
-
-            state.autosaveNotes =
-                !state.autosaveNotes;
-
-            updateAutosaveButton();
-
-            localStorage.setItem(
-                "daily_autosave_notes",
-                state.autosaveNotes
-                    ? "1"
-                    : "0"
-            );
-        }
-    );
-
-
-    /* =====================================================
        MOBILE
-    ====================================================== */
+    ===================================================== */
 
-    $("mobileMenuButton").addEventListener(
-        "click",
-        openMobileSidebar
-    );
+    function openMobileSidebar() {
 
-    $("mobileCloseSidebar").addEventListener(
-        "click",
-        closeMobileSidebar
-    );
-
-    sidebarOverlay.addEventListener(
-        "click",
-        closeMobileSidebar
-    );
-
-
-    /* =====================================================
-       GLOBAL KEYBOARD
-    ====================================================== */
-
-    document.addEventListener(
-        "keydown",
-        event => {
-
-            if (
-                event.key === "Escape"
-            ) {
-
-                taskModal.classList.add("hidden");
-                listModal.classList.add("hidden");
-                settingsModal.classList.add("hidden");
-                closeSearch();
-
-                $("notificationPopover")
-                    .classList.add("hidden");
-
-                return;
-            }
-
-
-            const tag =
-                document.activeElement?.tagName;
-
-            if (
-                tag === "INPUT" ||
-                tag === "TEXTAREA" ||
-                tag === "SELECT"
-            ) {
-                return;
-            }
-
-
-            if (
-                event.key.toLowerCase() === "n"
-            ) {
-
-                event.preventDefault();
-
-                openTaskModal();
-            }
-
-
-            if (
-                event.key === "/"
-            ) {
-
-                event.preventDefault();
-
-                openSearch();
-            }
-        }
-    );
-
-
-    /* =====================================================
-       CLOSE MODALS ON BACKDROP
-    ====================================================== */
-
-    [
-        taskModal,
-        listModal,
-        searchModal,
-        settingsModal
-    ].forEach(backdrop => {
-
-        backdrop.addEventListener(
-            "click",
-            event => {
-
-                if (
-                    event.target !== backdrop
-                ) {
-                    return;
-                }
-
-                backdrop.classList.add("hidden");
-            }
-        );
-    });
-
-
-    /* =====================================================
-       AUTH STATE
-    ====================================================== */
-
-    supabaseClient.auth.onAuthStateChange(
-        async (event, session) => {
-
-            if (session?.user) {
-
-                state.user = session.user;
-
-                await initializeApplication();
-
-            } else {
-
-                state.user = null;
-
-                showAuth();
-            }
-        }
-    );
-
-
-    /* =====================================================
-       APPLICATION INITIALIZATION
-    ====================================================== */
-
-    async function initializeApplication() {
-
-        if (state.initialized) {
-
-            showApp();
-
-            return;
-        }
-
-        state.initialized = true;
-
-        showApp();
-
-        await createProfileIfNeeded();
-
-        await loadProfile();
-
-        await loadLists();
-
-        await loadTasks();
-
-        loadTheme();
-
-        const autosave =
-            localStorage.getItem(
-                "daily_autosave_notes"
+        $("#sidebar")
+            ?.classList.add(
+                "mobile-open"
             );
 
-        if (autosave !== null) {
 
-            state.autosaveNotes =
-                autosave === "1";
-        }
+        $("#sidebarOverlay")
+            ?.classList.remove(
+                "hidden"
+            );
 
-        updateAutosaveButton();
+    }
 
-        state.selectedDate =
-            getTodayString();
 
-        state.calendarDate =
-            new Date();
+    function closeMobileSidebar() {
 
-        updateNavigation();
+        $("#sidebar")
+            ?.classList.remove(
+                "mobile-open"
+            );
 
-        updateBreadcrumb();
 
-        refreshVisibleData();
+        $("#sidebarOverlay")
+            ?.classList.add(
+                "hidden"
+            );
 
-        renderNotifications();
     }
 
 
     /* =====================================================
        LOGOUT
-    ====================================================== */
+    ===================================================== */
 
-    $("logoutButton").addEventListener(
-        "click",
-        async () => {
+    async function logout() {
 
-            await supabaseClient.auth.signOut();
+        await client.auth.signOut();
 
-            state.user = null;
-            state.profile = null;
-            state.tasks = [];
-            state.lists = [];
-            state.initialized = false;
+        state.user = null;
 
-            showAuth();
-        }
-    );
+        state.profile = null;
+
+        state.tasks = [];
+
+        state.lists = [];
+
+        showAuth();
+
+    }
 
 
     /* =====================================================
-       INITIAL SESSION CHECK
-    ====================================================== */
+       EVENTS
+    ===================================================== */
 
-    async function boot() {
+    function setupEvents() {
 
-        loadTheme();
 
-        updateAuthMode();
+        /* AUTH */
+
+        $("#authModeButton")
+            ?.addEventListener(
+                "click",
+                () => {
+
+                    const register =
+                        $("#authForm")
+                            .dataset.register !==
+                        "true";
+
+
+                    setAuthMode(register);
+
+                }
+            );
+
+
+        $("#togglePassword")
+            ?.addEventListener(
+                "click",
+                () => {
+
+                    const input =
+                        $("#authPassword");
+
+
+                    const visible =
+                        input.type ===
+                        "text";
+
+
+                    input.type =
+                        visible
+                            ? "password"
+                            : "text";
+
+
+                    $("#togglePassword")
+                        .textContent =
+                        visible
+                            ? "Показать"
+                            : "Скрыть";
+
+                }
+            );
+
+
+        $("#authForm")
+            ?.addEventListener(
+                "submit",
+                handleAuth
+            );
+
+
+        /* NAV */
+
+        $$(".nav-item[data-view]")
+            .forEach(button => {
+
+                button.addEventListener(
+                    "click",
+                    () =>
+                        navigate(
+                            button.dataset.view
+                        )
+                );
+
+            });
+
+
+        $("#createListButton")
+            ?.addEventListener(
+                "click",
+                () =>
+                    openModal("#listModal")
+            );
+
+
+        /* TASK CREATION */
+
+        $("#newTaskButton")
+            ?.addEventListener(
+                "click",
+                () =>
+                    openTaskModal()
+            );
+
+
+        $("#addTaskButton")
+            ?.addEventListener(
+                "click",
+                () =>
+                    openTaskModal()
+            );
+
+
+        $("#tasksPageAddButton")
+            ?.addEventListener(
+                "click",
+                () =>
+                    openTaskModal()
+            );
+
+
+        $("#selectedDateAddButton")
+            ?.addEventListener(
+                "click",
+                () =>
+                    openTaskModal({
+                        due_date:
+                            state.selectedDate
+                    })
+            );
+
+
+        $("#taskForm")
+            ?.addEventListener(
+                "submit",
+                event => {
+
+                    event.preventDefault();
+
+                    saveTask(
+                        event.currentTarget
+                    );
+
+                }
+            );
+
+
+        $("#cancelTaskButton")
+            ?.addEventListener(
+                "click",
+                () =>
+                    closeModal("#taskModal")
+            );
+
+
+        $("#closeTaskModal")
+            ?.addEventListener(
+                "click",
+                () =>
+                    closeModal("#taskModal")
+            );
+
+
+        /* LIST */
+
+        $("#listForm")
+            ?.addEventListener(
+                "submit",
+                event => {
+
+                    event.preventDefault();
+
+                    createList(
+                        $("#listName").value
+                    );
+
+                }
+            );
+
+
+        $("#closeListModal")
+            ?.addEventListener(
+                "click",
+                () =>
+                    closeModal("#listModal")
+            );
+
+
+        $("#cancelListButton")
+            ?.addEventListener(
+                "click",
+                () =>
+                    closeModal("#listModal")
+            );
+
+
+        /* TASK ACTIONS */
+
+        document.addEventListener(
+            "click",
+            event => {
+
+                const button =
+                    event.target.closest(
+                        "[data-action]"
+                    );
+
+
+                if (!button) {
+                    return;
+                }
+
+
+                const id =
+                    button.dataset.id;
+
+
+                const action =
+                    button.dataset.action;
+
+
+                if (action === "complete") {
+
+                    toggleTask(id);
+
+                }
+
+
+                if (action === "favorite") {
+
+                    toggleFavorite(id);
+
+                }
+
+
+                if (action === "edit") {
+
+                    const task =
+                        state.tasks.find(
+                            item =>
+                                String(item.id) ===
+                                String(id)
+                        );
+
+
+                    if (task) {
+
+                        openTaskModal(task);
+
+                    }
+
+                }
+
+
+                if (action === "delete") {
+
+                    deleteTask(id);
+
+                }
+
+            }
+        );
+
+
+        /* NOTES */
+
+        $("#noteInput")
+            ?.addEventListener(
+                "input",
+                scheduleNoteSave
+            );
+
+
+        $("#saveNoteButton")
+            ?.addEventListener(
+                "click",
+                saveNote
+            );
+
+
+        /* CALENDAR */
+
+        $("#prevMonthButton")
+            ?.addEventListener(
+                "click",
+                () =>
+                    changeCalendarMonth(-1)
+            );
+
+
+        $("#nextMonthButton")
+            ?.addEventListener(
+                "click",
+                () =>
+                    changeCalendarMonth(1)
+            );
+
+
+        $("#calendarTodayButton")
+            ?.addEventListener(
+                "click",
+                () => {
+
+                    const today =
+                        new Date();
+
+
+                    state.calendarMonth =
+                        new Date(
+                            today.getFullYear(),
+                            today.getMonth(),
+                            1
+                        );
+
+
+                    state.selectedDate =
+                        dateKey(today);
+
+
+                    renderCalendar();
+
+                    loadNote(
+                        state.selectedDate
+                    );
+
+                }
+            );
+
+
+        $("#openFullCalendarButton")
+            ?.addEventListener(
+                "click",
+                () =>
+                    navigate("calendar")
+            );
+
+
+        $("#fullCalendarPrevButton")
+            ?.addEventListener(
+                "click",
+                () =>
+                    changeCalendarMonth(-1)
+            );
+
+
+        $("#fullCalendarNextButton")
+            ?.addEventListener(
+                "click",
+                () =>
+                    changeCalendarMonth(1)
+            );
+
+
+        $("#fullCalendarTodayButton")
+            ?.addEventListener(
+                "click",
+                () => {
+
+                    const today =
+                        new Date();
+
+
+                    state.selectedDate =
+                        dateKey(today);
+
+
+                    state.calendarMonth =
+                        new Date(
+                            today.getFullYear(),
+                            today.getMonth(),
+                            1
+                        );
+
+
+                    renderCalendar();
+
+                    loadNote(
+                        state.selectedDate
+                    );
+
+                }
+            );
+
+
+        document.addEventListener(
+            "click",
+            event => {
+
+                const button =
+                    event.target.closest(
+                        "[data-calendar-date]"
+                    );
+
+
+                if (!button) {
+                    return;
+                }
+
+
+                selectCalendarDate(
+                    button.dataset.calendarDate
+                );
+
+            }
+        );
+
+
+        /* OVERDUE */
+
+        $("#moveOverdueButton")
+            ?.addEventListener(
+                "click",
+                moveOverdueToToday
+            );
+
+
+        /* TASK FILTER */
+
+        $$(".filter-button")
+            .forEach(button => {
+
+                button.addEventListener(
+                    "click",
+                    () => {
+
+                        $$(".filter-button")
+                            .forEach(
+                                item =>
+                                    item.classList.remove(
+                                        "active"
+                                    )
+                            );
+
+
+                        button.classList.add(
+                            "active"
+                        );
+
+
+                        state.taskFilter =
+                            button.dataset.taskFilter;
+
+
+                        renderAllTasks();
+
+                    }
+                );
+
+            });
+
+
+        $("#taskSortSelect")
+            ?.addEventListener(
+                "change",
+                event => {
+
+                    state.taskSort =
+                        event.target.value;
+
+
+                    renderAllTasks();
+
+                    renderTodayTasks();
+
+                }
+            );
+
+
+        /* SEARCH */
+
+        $("#searchButton")
+            ?.addEventListener(
+                "click",
+                openSearch
+            );
+
+
+        $("#searchInput")
+            ?.addEventListener(
+                "input",
+                event =>
+                    renderSearchResults(
+                        event.target.value
+                    )
+            );
+
+
+        $("#closeSearchModal")
+            ?.addEventListener(
+                "click",
+                () =>
+                    closeModal("#searchModal")
+            );
+
+
+        document.addEventListener(
+            "click",
+            event => {
+
+                const result =
+                    event.target.closest(
+                        "[data-search-task-id]"
+                    );
+
+
+                if (!result) {
+                    return;
+                }
+
+
+                const task =
+                    state.tasks.find(
+                        item =>
+                            String(item.id) ===
+                            String(
+                                result.dataset.searchTaskId
+                            )
+                    );
+
+
+                if (task) {
+
+                    closeModal("#searchModal");
+
+                    openTaskModal(task);
+
+                }
+
+            }
+        );
+
+
+        /* NOTIFICATIONS */
+
+        $("#notificationButton")
+            ?.addEventListener(
+                "click",
+                toggleNotifications
+            );
+
+
+        $("#closeNotificationButton")
+            ?.addEventListener(
+                "click",
+                () =>
+                    $("#notificationPopover")
+                        ?.classList.add(
+                            "hidden"
+                        )
+            );
+
+
+        /* SETTINGS */
+
+        $("#closeSettingsModal")
+            ?.addEventListener(
+                "click",
+                () =>
+                    closeModal("#settingsModal")
+            );
+
+
+        $("#saveSettingsButton")
+            ?.addEventListener(
+                "click",
+                saveSettings
+            );
+
+
+        /* LOGOUT */
+
+        $("#logoutButton")
+            ?.addEventListener(
+                "click",
+                logout
+            );
+
+
+        /* MOBILE */
+
+        $("#mobileOpenSidebar")
+            ?.addEventListener(
+                "click",
+                openMobileSidebar
+            );
+
+
+        $("#mobileCloseSidebar")
+            ?.addEventListener(
+                "click",
+                closeMobileSidebar
+            );
+
+
+        $("#sidebarOverlay")
+            ?.addEventListener(
+                "click",
+                closeMobileSidebar
+            );
+
+
+        /* MODAL BACKDROP */
+
+        $$(".modal-backdrop")
+            .forEach(backdrop => {
+
+                backdrop.addEventListener(
+                    "click",
+                    event => {
+
+                        if (
+                            event.target ===
+                            backdrop
+                        ) {
+
+                            backdrop.classList.add(
+                                "hidden"
+                            );
+
+                        }
+
+                    }
+                );
+
+            });
+
+
+        /* KEYBOARD */
+
+        document.addEventListener(
+            "keydown",
+            event => {
+
+                if (
+                    event.key === "Escape"
+                ) {
+
+                    $$(".modal-backdrop")
+                        .forEach(
+                            modal =>
+                                modal.classList.add(
+                                    "hidden"
+                                )
+                        );
+
+
+                    $("#notificationPopover")
+                        ?.classList.add(
+                            "hidden"
+                        );
+
+                }
+
+
+                if (
+                    (
+                        event.ctrlKey ||
+                        event.metaKey
+                    ) &&
+                    event.key.toLowerCase() ===
+                        "k"
+                ) {
+
+                    event.preventDefault();
+
+                    openSearch();
+
+                }
+
+
+                if (
+                    event.key.toLowerCase() ===
+                        "n" &&
+                    !isTyping()
+                ) {
+
+                    event.preventDefault();
+
+                    openTaskModal();
+
+                }
+
+            }
+        );
+
+    }
+
+
+    function isTyping() {
+
+        const tag =
+            document.activeElement?.tagName;
+
+
+        return (
+            tag === "INPUT" ||
+            tag === "TEXTAREA" ||
+            tag === "SELECT"
+        );
+
+    }
+
+
+    /* =====================================================
+       AUTH
+    ===================================================== */
+
+    async function handleAuth(event) {
+
+        event.preventDefault();
+
+
+        const register =
+            event.currentTarget
+                .dataset.register ===
+            "true";
+
+
+        const email =
+            $("#authEmail")
+                .value
+                .trim();
+
+
+        const password =
+            $("#authPassword")
+                .value;
+
+
+        const displayName =
+            $("#displayName")
+                .value
+                .trim();
+
+
+        const message =
+            $("#authMessage");
+
+
+        message.textContent = "";
+
+
+        const button =
+            $("#authSubmitButton");
+
+
+        button.disabled = true;
+
+        button.textContent =
+            "Подождите…";
+
+
+        try {
+
+            if (register) {
+
+                if (
+                    !displayName
+                ) {
+
+                    throw new Error(
+                        "Введите имя."
+                    );
+
+                }
+
+
+                const {
+                    data,
+                    error
+                } =
+                    await client.auth.signUp({
+                        email,
+                        password,
+                        options: {
+                            data: {
+                                display_name:
+                                    displayName
+                            }
+                        }
+                    });
+
+
+                if (error) {
+                    throw error;
+                }
+
+
+                if (
+                    data.session
+                ) {
+
+                    state.user =
+                        data.user;
+
+                    await bootApp();
+
+                } else {
+
+                    message.style.color =
+                        "#39a96b";
+
+                    message.textContent =
+                        "Аккаунт создан. Проверь почту, если требуется подтверждение.";
+
+                }
+
+            } else {
+
+                const {
+                    data,
+                    error
+                } =
+                    await client.auth.signInWithPassword({
+                        email,
+                        password
+                    });
+
+
+                if (error) {
+                    throw error;
+                }
+
+
+                state.user =
+                    data.user;
+
+
+                await bootApp();
+
+            }
+
+        } catch (error) {
+
+            message.style.color =
+                "#e05d67";
+
+
+            message.textContent =
+                friendlyError(error);
+
+        } finally {
+
+            button.disabled =
+                false;
+
+
+            button.textContent =
+                register
+                    ? "Создать аккаунт"
+                    : "Войти";
+
+        }
+
+    }
+
+
+    /* =====================================================
+       BOOT
+    ===================================================== */
+
+    async function bootApp() {
+
+        if (!state.user) {
+            return;
+        }
+
+
+        showApp();
+
+
+        await loadProfile();
+
+        renderProfile();
+
+        loadSettings();
+
+        await loadLists();
+
+        setupInitialCalendar();
+
+
+        await loadTasks();
+
+
+        updateView();
+
+    }
+
+
+    function setupInitialCalendar() {
+
+        const today =
+            new Date();
+
+
+        state.selectedDate =
+            dateKey(today);
+
+
+        state.calendarMonth =
+            new Date(
+                today.getFullYear(),
+                today.getMonth(),
+                1
+            );
+
+    }
+
+
+    /* =====================================================
+       INIT
+    ===================================================== */
+
+    async function init() {
+
+        setupEvents();
+
+        setAuthMode(false);
+
 
         const {
             data
-        } = await supabaseClient.auth.getSession();
+        } =
+            await client.auth.getSession();
 
-        if (data?.session?.user) {
+
+        if (data.session?.user) {
 
             state.user =
                 data.session.user;
 
-            await initializeApplication();
+
+            await bootApp();
 
         } else {
 
             showAuth();
+
         }
+
+
+        client.auth.onAuthStateChange(
+            async (
+                event,
+                session
+            ) => {
+
+                if (
+                    event === "SIGNED_IN" &&
+                    session?.user
+                ) {
+
+                    state.user =
+                        session.user;
+
+
+                    await bootApp();
+
+                }
+
+
+                if (
+                    event === "SIGNED_OUT"
+                ) {
+
+                    showAuth();
+
+                }
+
+            }
+        );
+
     }
 
 
-    boot();
+    init();
 
 })();
