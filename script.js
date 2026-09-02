@@ -14,7 +14,6 @@
         console.error("Supabase JS не загружен.");
         return;
     }
-
     if (!window.DAILY_CONFIG) {
         console.error("supabase-config.js не найден.");
         return;
