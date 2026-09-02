@@ -1,1 +1,1150 @@
+```css
+/* =========================================================
+   MYDAY — PREMIUM DARK
+   Основные стили приложения
+   ========================================================= */
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+:root {
+    --background: #08090c;
+    --background-soft: #0d0f13;
+    --sidebar: #0a0b0f;
+
+    --card: #111318;
+    --card-hover: #151820;
+
+    --border: rgba(255, 255, 255, 0.07);
+    --border-light: rgba(255, 255, 255, 0.11);
+
+    --text: #f5f5f7;
+    --text-secondary: #a4a7ae;
+    --text-muted: #686c76;
+
+    --accent: #ffffff;
+    --accent-dark: #17181c;
+
+    --success: #a8e6b0;
+
+    --radius: 20px;
+}
+
+html {
+    scroll-behavior: smooth;
+}
+
+body {
+    min-height: 100vh;
+    background:
+        radial-gradient(
+            circle at 80% 0%,
+            rgba(255, 255, 255, 0.035),
+            transparent 32%
+        ),
+        var(--background);
+
+    color: var(--text);
+
+    font-family:
+        Inter,
+        -apple-system,
+        BlinkMacSystemFont,
+        "Segoe UI",
+        Roboto,
+        Helvetica,
+        Arial,
+        sans-serif;
+
+    -webkit-font-smoothing: antialiased;
+}
+
+
+/* =========================================================
+   APP
+   ========================================================= */
+
+.app {
+    min-height: 100vh;
+    display: flex;
+}
+
+
+/* =========================================================
+   SIDEBAR
+   ========================================================= */
+
+.sidebar {
+    width: 250px;
+    min-height: 100vh;
+
+    background: rgba(10, 11, 15, 0.88);
+
+    border-right: 1px solid var(--border);
+
+    display: flex;
+    flex-direction: column;
+
+    padding: 28px 16px;
+
+    position: fixed;
+    left: 0;
+    top: 0;
+    bottom: 0;
+
+    z-index: 20;
+
+    backdrop-filter: blur(20px);
+}
+
+
+/* =========================================================
+   BRAND
+   ========================================================= */
+
+.brand {
+    display: flex;
+    align-items: center;
+
+    gap: 11px;
+
+    padding: 4px 10px 42px;
+}
+
+.brand-icon {
+    width: 34px;
+    height: 34px;
+
+    border-radius: 10px;
+
+    background: #ffffff;
+
+    color: #090a0d;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    font-size: 15px;
+    font-weight: 800;
+}
+
+.brand-text {
+    font-size: 16px;
+    letter-spacing: 2.5px;
+    font-weight: 700;
+}
+
+.brand-text span {
+    font-weight: 400;
+    opacity: 0.55;
+}
+
+
+/* =========================================================
+   NAVIGATION
+   ========================================================= */
+
+.navigation {
+    display: flex;
+    flex-direction: column;
+
+    gap: 5px;
+}
+
+.nav-item {
+    height: 46px;
+
+    padding: 0 13px;
+
+    border-radius: 12px;
+
+    color: var(--text-secondary);
+
+    text-decoration: none;
+
+    display: flex;
+    align-items: center;
+
+    gap: 13px;
+
+    font-size: 14px;
+    font-weight: 500;
+
+    transition:
+        background 0.2s ease,
+        color 0.2s ease,
+        transform 0.2s ease;
+}
+
+.nav-item:hover {
+    background: rgba(255, 255, 255, 0.05);
+    color: var(--text);
+}
+
+.nav-item.active {
+    background: rgba(255, 255, 255, 0.08);
+    color: var(--text);
+}
+
+.nav-icon {
+    width: 20px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    font-size: 17px;
+
+    opacity: 0.75;
+}
+
+.nav-item.active .nav-icon {
+    opacity: 1;
+}
+
+
+/* =========================================================
+   SIDEBAR BOTTOM
+   ========================================================= */
+
+.sidebar-bottom {
+    margin-top: auto;
+}
+
+.profile {
+    margin-top: 18px;
+
+    padding: 13px 9px;
+
+    border-top: 1px solid var(--border);
+
+    display: flex;
+    align-items: center;
+
+    gap: 11px;
+}
+
+.profile-avatar {
+    width: 35px;
+    height: 35px;
+
+    border-radius: 50%;
+
+    background: #1c1f25;
+
+    border: 1px solid var(--border-light);
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    font-size: 13px;
+    font-weight: 600;
+}
+
+.profile-info {
+    min-width: 0;
+
+    display: flex;
+    flex-direction: column;
+
+    gap: 3px;
+}
+
+.profile-info strong {
+    font-size: 12px;
+    font-weight: 600;
+
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.profile-info span {
+    color: var(--text-muted);
+
+    font-size: 11px;
+}
+
+.profile-more {
+    margin-left: auto;
+
+    background: transparent;
+    border: none;
+
+    color: var(--text-muted);
+
+    cursor: pointer;
+
+    letter-spacing: 2px;
+}
+
+
+/* =========================================================
+   MAIN
+   ========================================================= */
+
+.main {
+    width: calc(100% - 250px);
+
+    margin-left: 250px;
+
+    min-height: 100vh;
+}
+
+
+/* =========================================================
+   TOPBAR
+   ========================================================= */
+
+.topbar {
+    height: 78px;
+
+    border-bottom: 1px solid var(--border);
+
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+
+    padding: 0 40px;
+}
+
+.topbar-actions {
+    display: flex;
+    align-items: center;
+
+    gap: 12px;
+}
+
+.icon-button,
+.avatar-button {
+    border: 1px solid var(--border);
+
+    background: rgba(255, 255, 255, 0.025);
+
+    color: var(--text-secondary);
+
+    cursor: pointer;
+
+    transition:
+        background 0.2s ease,
+        border-color 0.2s ease;
+}
+
+.icon-button {
+    width: 40px;
+    height: 40px;
+
+    border-radius: 12px;
+
+    font-size: 17px;
+}
+
+.avatar-button {
+    width: 40px;
+    height: 40px;
+
+    border-radius: 50%;
+
+    color: var(--text);
+
+    font-size: 13px;
+    font-weight: 600;
+}
+
+.icon-button:hover,
+.avatar-button:hover {
+    background: rgba(255, 255, 255, 0.07);
+    border-color: var(--border-light);
+}
+
+.mobile-brand {
+    display: none;
+}
+
+
+/* =========================================================
+   CONTENT
+   ========================================================= */
+
+.content {
+    max-width: 1450px;
+
+    margin: 0 auto;
+
+    padding: 52px 52px 70px;
+}
+
+
+/* =========================================================
+   WELCOME
+   ========================================================= */
+
+.welcome {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+
+    margin-bottom: 38px;
+}
+
+.date {
+    color: var(--text-muted);
+
+    font-size: 11px;
+    font-weight: 600;
+
+    letter-spacing: 2px;
+
+    margin-bottom: 13px;
+}
+
+.welcome h1 {
+    font-size: clamp(30px, 4vw, 45px);
+
+    line-height: 1.1;
+
+    font-weight: 600;
+
+    letter-spacing: -1.5px;
+}
+
+.welcome h1 span {
+    color: var(--text-secondary);
+}
+
+.welcome h2 {
+    margin-top: 5px;
+
+    font-size: clamp(18px, 2vw, 24px);
+
+    color: var(--text-secondary);
+
+    font-weight: 400;
+
+    letter-spacing: -0.5px;
+}
+
+
+/* =========================================================
+   BUTTON
+   ========================================================= */
+
+.primary-button {
+    height: 45px;
+
+    padding: 0 18px;
+
+    border: none;
+
+    border-radius: 12px;
+
+    background: var(--accent);
+
+    color: #090a0d;
+
+    font-size: 13px;
+
+    font-weight: 600;
+
+    display: flex;
+    align-items: center;
+
+    gap: 9px;
+
+    cursor: pointer;
+
+    transition:
+        transform 0.2s ease,
+        opacity 0.2s ease;
+}
+
+.primary-button span {
+    font-size: 19px;
+    font-weight: 400;
+}
+
+.primary-button:hover {
+    transform: translateY(-1px);
+    opacity: 0.9;
+}
+
+.primary-button:active {
+    transform: translateY(0);
+}
+
+
+/* =========================================================
+   DASHBOARD GRID
+   ========================================================= */
+
+.dashboard-grid {
+    display: grid;
+
+    grid-template-columns: 1.05fr 0.95fr;
+
+    gap: 20px;
+}
+
+
+/* =========================================================
+   CARDS
+   ========================================================= */
+
+.card {
+    background:
+        linear-gradient(
+            145deg,
+            rgba(255, 255, 255, 0.035),
+            rgba(255, 255, 255, 0.012)
+        );
+
+    border: 1px solid var(--border);
+
+    border-radius: var(--radius);
+
+    padding: 27px;
+
+    position: relative;
+
+    overflow: hidden;
+
+    box-shadow:
+        0 20px 50px rgba(0, 0, 0, 0.16);
+
+    transition:
+        background 0.25s ease,
+        border-color 0.25s ease,
+        transform 0.25s ease;
+}
+
+.card:hover {
+    background:
+        linear-gradient(
+            145deg,
+            rgba(255, 255, 255, 0.045),
+            rgba(255, 255, 255, 0.015)
+        );
+
+    border-color: rgba(255, 255, 255, 0.10);
+}
+
+.card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+
+    margin-bottom: 25px;
+}
+
+.card-label {
+    color: var(--text-muted);
+
+    font-size: 9px;
+
+    font-weight: 700;
+
+    letter-spacing: 2px;
+}
+
+.card h3 {
+    margin-top: 7px;
+
+    font-size: 19px;
+
+    font-weight: 600;
+
+    letter-spacing: -0.4px;
+}
+
+.more-button {
+    border: none;
+
+    background: transparent;
+
+    color: var(--text-muted);
+
+    letter-spacing: 2px;
+
+    cursor: pointer;
+
+    padding: 3px 0;
+}
+
+
+/* =========================================================
+   PROGRESS
+   ========================================================= */
+
+.progress {
+    margin-bottom: 21px;
+}
+
+.progress-info {
+    display: flex;
+    justify-content: space-between;
+
+    margin-bottom: 8px;
+
+    font-size: 11px;
+
+    color: var(--text-muted);
+}
+
+.progress-info strong {
+    color: var(--text-secondary);
+
+    font-weight: 500;
+}
+
+.progress-bar {
+    height: 4px;
+
+    background: rgba(255, 255, 255, 0.06);
+
+    border-radius: 99px;
+
+    overflow: hidden;
+}
+
+.progress-value {
+    height: 100%;
+
+    width: 40%;
+
+    background: rgba(255, 255, 255, 0.75);
+
+    border-radius: inherit;
+}
+
+
+/* =========================================================
+   TASKS
+   ========================================================= */
+
+.tasks-list {
+    display: flex;
+    flex-direction: column;
+}
+
+.task {
+    min-height: 61px;
+
+    display: flex;
+    align-items: center;
+
+    gap: 14px;
+
+    border-bottom: 1px solid var(--border);
+
+    transition: opacity 0.2s ease;
+}
+
+.task:last-child {
+    border-bottom: none;
+}
+
+.task:hover {
+    opacity: 0.78;
+}
+
+.check {
+    width: 19px;
+    height: 19px;
+
+    border: 1px solid rgba(255, 255, 255, 0.2);
+
+    border-radius: 6px;
+
+    flex-shrink: 0;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    color: #111;
+
+    font-size: 12px;
+
+    transition:
+        background 0.2s ease,
+        border-color 0.2s ease;
+}
+
+.task.completed .check {
+    background: var(--success);
+    border-color: var(--success);
+}
+
+.task.completed .task-content strong {
+    color: var(--text-muted);
+
+    text-decoration: line-through;
+}
+
+.task-content {
+    min-width: 0;
+
+    flex: 1;
+
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+
+    gap: 12px;
+}
+
+.task-content strong {
+    font-size: 13px;
+
+    font-weight: 500;
+
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.task-content span {
+    color: var(--text-muted);
+
+    font-size: 11px;
+
+    flex-shrink: 0;
+}
+
+.add-task {
+    width: 100%;
+
+    margin-top: 18px;
+
+    height: 40px;
+
+    border: 1px dashed rgba(255, 255, 255, 0.12);
+
+    border-radius: 10px;
+
+    background: transparent;
+
+    color: var(--text-muted);
+
+    cursor: pointer;
+
+    font-size: 12px;
+
+    transition:
+        background 0.2s ease,
+        color 0.2s ease,
+        border-color 0.2s ease;
+}
+
+.add-task span {
+    font-size: 17px;
+
+    margin-right: 6px;
+}
+
+.add-task:hover {
+    color: var(--text-secondary);
+
+    border-color: rgba(255, 255, 255, 0.2);
+
+    background: rgba(255, 255, 255, 0.025);
+}
+
+
+/* =========================================================
+   SCHEDULE
+   ========================================================= */
+
+.schedule {
+    position: relative;
+}
+
+.schedule-item {
+    min-height: 69px;
+
+    display: grid;
+
+    grid-template-columns: 48px 12px 1fr;
+
+    align-items: center;
+
+    gap: 12px;
+}
+
+.schedule-time {
+    color: var(--text-muted);
+
+    font-size: 10px;
+
+    text-align: right;
+}
+
+.schedule-line {
+    width: 6px;
+    height: 6px;
+
+    border-radius: 50%;
+
+    background: rgba(255, 255, 255, 0.4);
+
+    position: relative;
+}
+
+.schedule-item:not(:last-child) .schedule-line::after {
+    content: "";
+
+    position: absolute;
+
+    width: 1px;
+
+    height: 69px;
+
+    top: 6px;
+    left: 2.5px;
+
+    background: rgba(255, 255, 255, 0.08);
+}
+
+.schedule-event {
+    min-height: 47px;
+
+    padding: 10px 14px;
+
+    border: 1px solid var(--border);
+
+    border-radius: 11px;
+
+    background: rgba(255, 255, 255, 0.025);
+
+    display: flex;
+    flex-direction: column;
+
+    justify-content: center;
+
+    gap: 3px;
+
+    transition:
+        background 0.2s ease,
+        border-color 0.2s ease;
+}
+
+.schedule-event:hover {
+    background: rgba(255, 255, 255, 0.05);
+
+    border-color: var(--border-light);
+}
+
+.schedule-event strong {
+    font-size: 12px;
+
+    font-weight: 500;
+}
+
+.schedule-event span {
+    color: var(--text-muted);
+
+    font-size: 10px;
+}
+
+
+/* =========================================================
+   BOTTOM GRID
+   ========================================================= */
+
+.bottom-grid {
+    display: grid;
+
+    grid-template-columns: 0.85fr 1.15fr;
+
+    gap: 20px;
+
+    margin-top: 20px;
+}
+
+
+/* =========================================================
+   QUOTE
+   ========================================================= */
+
+.quote-card {
+    min-height: 190px;
+
+    display: flex;
+    flex-direction: column;
+
+    justify-content: center;
+
+    padding: 34px;
+}
+
+.quote-icon {
+    position: absolute;
+
+    top: -8px;
+    right: 24px;
+
+    font-family: Georgia, serif;
+
+    font-size: 100px;
+
+    line-height: 1;
+
+    color: rgba(255, 255, 255, 0.04);
+}
+
+.quote-card p {
+    max-width: 410px;
+
+    font-family: Georgia, serif;
+
+    font-size: 17px;
+
+    line-height: 1.55;
+
+    color: var(--text-secondary);
+
+    position: relative;
+
+    z-index: 1;
+}
+
+.quote-card span {
+    margin-top: 17px;
+
+    font-size: 9px;
+
+    letter-spacing: 2px;
+
+    font-weight: 700;
+
+    color: var(--text-muted);
+}
+
+
+/* =========================================================
+   FOCUS
+   ========================================================= */
+
+.focus-card {
+    min-height: 190px;
+}
+
+.focus-header {
+    display: flex;
+
+    justify-content: space-between;
+    align-items: flex-start;
+}
+
+.focus-number {
+    font-size: 42px;
+
+    line-height: 1;
+
+    font-weight: 200;
+
+    color: rgba(255, 255, 255, 0.12);
+
+    letter-spacing: -3px;
+}
+
+.focus-card p {
+    max-width: 550px;
+
+    margin-top: 30px;
+
+    color: var(--text-secondary);
+
+    font-size: 13px;
+
+    line-height: 1.7;
+}
+
+
+/* =========================================================
+   SELECTION
+   ========================================================= */
+
+::selection {
+    background: rgba(255, 255, 255, 0.18);
+
+    color: white;
+}
+
+
+/* =========================================================
+   SCROLLBAR
+   ========================================================= */
+
+::-webkit-scrollbar {
+    width: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.08);
+
+    border-radius: 99px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.14);
+}
+
+
+/* =========================================================
+   RESPONSIVE — TABLET
+   ========================================================= */
+
+@media (max-width: 1050px) {
+
+    .sidebar {
+        width: 215px;
+    }
+
+    .main {
+        width: calc(100% - 215px);
+
+        margin-left: 215px;
+    }
+
+    .content {
+        padding: 42px 32px 60px;
+    }
+
+    .dashboard-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .bottom-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+
+/* =========================================================
+   RESPONSIVE — MOBILE
+   ========================================================= */
+
+@media (max-width: 720px) {
+
+    .sidebar {
+        display: none;
+    }
+
+    .main {
+        width: 100%;
+
+        margin-left: 0;
+    }
+
+    .topbar {
+        height: 67px;
+
+        padding: 0 18px;
+
+        justify-content: space-between;
+    }
+
+    .mobile-brand {
+        display: block;
+
+        font-size: 13px;
+
+        letter-spacing: 2px;
+
+        font-weight: 700;
+    }
+
+    .content {
+        padding: 32px 18px 45px;
+    }
+
+    .welcome {
+        align-items: flex-start;
+
+        flex-direction: column;
+
+        gap: 24px;
+
+        margin-bottom: 28px;
+    }
+
+    .primary-button {
+        width: 100%;
+
+        justify-content: center;
+    }
+
+    .card {
+        padding: 22px;
+
+        border-radius: 17px;
+    }
+
+    .dashboard-grid,
+    .bottom-grid {
+        gap: 14px;
+    }
+
+    .task-content strong {
+        font-size: 12px;
+    }
+
+    .schedule-item {
+        grid-template-columns: 42px 10px 1fr;
+
+        gap: 8px;
+    }
+
+    .quote-card,
+    .focus-card {
+        min-height: 170px;
+    }
+}
+
+
+/* =========================================================
+   SMALL MOBILE
+   ========================================================= */
+
+@media (max-width: 420px) {
+
+    .welcome h1 {
+        font-size: 30px;
+    }
+
+    .welcome h2 {
+        font-size: 18px;
+    }
+
+    .card {
+        padding: 19px;
+    }
+
+    .task {
+        min-height: 56px;
+    }
+
+    .task-content span {
+        display: none;
+    }
+
+    .schedule-event {
+        padding: 9px 11px;
+    }
+
+    .schedule-event strong {
+        font-size: 11px;
+    }
+}
+```
 
