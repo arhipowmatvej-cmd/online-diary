@@ -59,7 +59,9 @@
 
         authMode: "login",
 
-        noteSaveTimer: null
+        noteSaveTimer: null,
+
+        updatingTasks: new Set()
     };
 
 
@@ -164,7 +166,12 @@
 
 
     function isoToDate(value) {
-        const [year, month, day] = value.split("-").map(Number);
+        if (!value) {
+            return new Date();
+        }
+
+        const [year, month, day] =
+            value.split("-").map(Number);
 
         return new Date(
             year,
@@ -219,7 +226,9 @@
             ).toUpperCase();
         }
 
-        return clean.substring(0, 2).toUpperCase();
+        return clean
+            .substring(0, 2)
+            .toUpperCase();
     }
 
 
@@ -247,22 +256,33 @@
 
         const day = result.getDay();
 
-        const diff = day === 0
-            ? -6
-            : 1 - day;
+        const diff =
+            day === 0
+                ? -6
+                : 1 - day;
 
-        result.setDate(result.getDate() + diff);
+        result.setDate(
+            result.getDate() + diff
+        );
 
-        result.setHours(0, 0, 0, 0);
+        result.setHours(
+            0,
+            0,
+            0,
+            0
+        );
 
         return result;
     }
 
 
     function endOfWeek(date) {
-        const result = startOfWeek(date);
+        const result =
+            startOfWeek(date);
 
-        result.setDate(result.getDate() + 6);
+        result.setDate(
+            result.getDate() + 6
+        );
 
         return result;
     }
@@ -278,14 +298,25 @@
     }
 
 
-    function showToast(message, type = "success") {
-        const container = $("#toastContainer");
+    function showToast(
+        message,
+        type = "success"
+    ) {
+        const container =
+            $("#toastContainer");
 
-        const toast = document.createElement("div");
+        if (!container) {
+            return;
+        }
 
-        toast.className = `toast ${type}`;
+        const toast =
+            document.createElement("div");
 
-        toast.textContent = message;
+        toast.className =
+            `toast ${type}`;
+
+        toast.textContent =
+            message;
 
         container.appendChild(toast);
 
@@ -295,42 +326,79 @@
     }
 
 
-    function showAuthMessage(message, type = "error") {
-        authMessage.textContent = message;
-        authMessage.className = `auth-message ${type}`;
+    function showAuthMessage(
+        message,
+        type = "error"
+    ) {
+        authMessage.textContent =
+            message;
+
+        authMessage.className =
+            `auth-message ${type}`;
     }
 
 
     function clearAuthMessage() {
         authMessage.textContent = "";
-        authMessage.className = "auth-message";
+
+        authMessage.className =
+            "auth-message";
     }
 
 
-    function setLoading(button, loading) {
+    function setLoading(
+        button,
+        loading
+    ) {
+        if (!button) {
+            return;
+        }
+
         if (loading) {
+
             button.disabled = true;
-            button.dataset.originalText = button.textContent;
-            button.textContent = "Загрузка...";
-        } else {
-            button.disabled = false;
+
+            button.dataset.originalText =
+                button.textContent;
+
             button.textContent =
-                button.dataset.originalText || "Войти";
+                "Загрузка...";
+
+        } else {
+
+            button.disabled = false;
+
+            button.textContent =
+                button.dataset.originalText ||
+                "Войти";
         }
     }
 
 
     function openModal(element) {
-        element.classList.remove("hidden");
+        if (!element) {
+            return;
+        }
+
+        element.classList.remove(
+            "hidden"
+        );
     }
 
 
     function closeModal(element) {
-        element.classList.add("hidden");
+        if (!element) {
+            return;
+        }
+
+        element.classList.add(
+            "hidden"
+        );
     }
 
 
     function closeAllModals() {
+
         [
             taskModal,
             listModal,
@@ -338,13 +406,27 @@
             settingsModal
         ].forEach(closeModal);
 
-        notificationPopover.classList.add("hidden");
+        if (notificationPopover) {
+            notificationPopover.classList.add(
+                "hidden"
+            );
+        }
     }
 
 
     function closeMobileSidebar() {
-        sidebar.classList.remove("mobile-open");
-        sidebarOverlay.classList.remove("active");
+
+        if (sidebar) {
+            sidebar.classList.remove(
+                "mobile-open"
+            );
+        }
+
+        if (sidebarOverlay) {
+            sidebarOverlay.classList.remove(
+                "active"
+            );
+        }
     }
 
 
@@ -353,18 +435,21 @@
     ===================================================== */
 
     function setAuthMode(mode) {
+
         state.authMode = mode;
 
         clearAuthMessage();
 
         if (mode === "register") {
 
-            authTitle.textContent = "Создай аккаунт";
+            authTitle.textContent =
+                "Создай аккаунт";
 
             authSubtitle.textContent =
                 "Сохрани свой день и задачи в Daily.";
 
-            authSubmit.textContent = "Создать аккаунт";
+            authSubmit.textContent =
+                "Создать аккаунт";
 
             authSwitchText.textContent =
                 "Уже есть аккаунт?";
@@ -372,9 +457,12 @@
             authSwitchButton.textContent =
                 "Войти";
 
-            displayNameGroup.classList.remove("hidden");
+            displayNameGroup.classList.remove(
+                "hidden"
+            );
 
-            displayNameInput.required = true;
+            displayNameInput.required =
+                true;
 
         } else {
 
@@ -384,7 +472,8 @@
             authSubtitle.textContent =
                 "Войди в свой аккаунт, чтобы продолжить.";
 
-            authSubmit.textContent = "Войти";
+            authSubmit.textContent =
+                "Войти";
 
             authSwitchText.textContent =
                 "Нет аккаунта?";
@@ -392,23 +481,33 @@
             authSwitchButton.textContent =
                 "Создать аккаунт";
 
-            displayNameGroup.classList.add("hidden");
+            displayNameGroup.classList.add(
+                "hidden"
+            );
 
-            displayNameInput.required = false;
+            displayNameInput.required =
+                false;
         }
     }
 
 
     async function handleAuthSubmit(event) {
+
         event.preventDefault();
 
         clearAuthMessage();
 
-        const email = authEmail.value.trim();
-        const password = authPassword.value;
-        const displayName = displayNameInput.value.trim();
+        const email =
+            authEmail.value.trim();
+
+        const password =
+            authPassword.value;
+
+        const displayName =
+            displayNameInput.value.trim();
 
         if (!email || !password) {
+
             showAuthMessage(
                 "Заполни email и пароль."
             );
@@ -417,6 +516,7 @@
         }
 
         if (password.length < 6) {
+
             showAuthMessage(
                 "Пароль должен содержать минимум 6 символов."
             );
@@ -424,11 +524,17 @@
             return;
         }
 
-        setLoading(authSubmit, true);
+        setLoading(
+            authSubmit,
+            true
+        );
 
         try {
 
-            if (state.authMode === "login") {
+            if (
+                state.authMode ===
+                "login"
+            ) {
 
                 const { error } =
                     await supabase.auth.signInWithPassword({
@@ -447,14 +553,18 @@
 
             } else {
 
-                const { data, error } =
+                const {
+                    data,
+                    error
+                } =
                     await supabase.auth.signUp({
                         email,
                         password,
                         options: {
                             data: {
                                 display_name:
-                                    displayName || "Мой профиль"
+                                    displayName ||
+                                    "Мой профиль"
                             }
                         }
                     });
@@ -491,37 +601,66 @@
             );
 
         } finally {
-            setLoading(authSubmit, false);
+
+            setLoading(
+                authSubmit,
+                false
+            );
         }
     }
 
 
     function getFriendlyAuthError(error) {
-        const message =
-            String(error?.message || "").toLowerCase();
 
-        if (message.includes("invalid login credentials")) {
+        const message =
+            String(
+                error?.message || ""
+            ).toLowerCase();
+
+        if (
+            message.includes(
+                "invalid login credentials"
+            )
+        ) {
             return "Неверный email или пароль.";
         }
 
-        if (message.includes("email not confirmed")) {
+        if (
+            message.includes(
+                "email not confirmed"
+            )
+        ) {
             return "Сначала подтверди email через письмо.";
         }
 
-        if (message.includes("user already registered")) {
+        if (
+            message.includes(
+                "user already registered"
+            )
+        ) {
             return "Этот email уже зарегистрирован.";
         }
 
-        if (message.includes("password")) {
+        if (
+            message.includes(
+                "password"
+            )
+        ) {
             return "Проверь пароль. Минимум 6 символов.";
         }
 
-        if (message.includes("rate limit")) {
+        if (
+            message.includes(
+                "rate limit"
+            )
+        ) {
             return "Слишком много попыток. Попробуй немного позже.";
         }
 
-        return error?.message ||
-            "Не удалось выполнить операцию.";
+        return (
+            error?.message ||
+            "Не удалось выполнить операцию."
+        );
     }
 
 
@@ -529,29 +668,49 @@
        AUTH STATE
     ===================================================== */
 
-    async function handleSession(session) {
+    async function handleSession(
+        session
+    ) {
 
         if (!session?.user) {
 
             state.user = null;
             state.profile = null;
+            state.tasks = [];
+            state.allTasks = [];
+            state.lists = [];
 
-            appShell.classList.add("hidden");
-            authScreen.classList.remove("hidden");
-            loadingScreen.classList.add("hidden");
+            appShell.classList.add(
+                "hidden"
+            );
+
+            authScreen.classList.remove(
+                "hidden"
+            );
+
+            loadingScreen.classList.add(
+                "hidden"
+            );
 
             return;
         }
 
-        state.user = session.user;
+        state.user =
+            session.user;
 
-        authScreen.classList.add("hidden");
+        authScreen.classList.add(
+            "hidden"
+        );
 
         await loadUserData();
 
-        appShell.classList.remove("hidden");
+        appShell.classList.remove(
+            "hidden"
+        );
 
-        loadingScreen.classList.add("hidden");
+        loadingScreen.classList.add(
+            "hidden"
+        );
 
         renderUser();
 
@@ -565,15 +724,26 @@
 
     async function loadProfile() {
 
-        const { data, error } =
+        const {
+            data,
+            error
+        } =
             await supabase
                 .from("profiles")
                 .select("*")
-                .eq("id", state.user.id)
+                .eq(
+                    "id",
+                    state.user.id
+                )
                 .maybeSingle();
 
         if (error) {
-            console.error(error);
+
+            console.error(
+                "Ошибка профиля:",
+                error
+            );
+
             return null;
         }
 
@@ -583,7 +753,8 @@
 
     async function ensureProfile() {
 
-        let profile = await loadProfile();
+        let profile =
+            await loadProfile();
 
         if (!profile) {
 
@@ -592,13 +763,17 @@
                 state.user.email?.split("@")[0] ||
                 "Мой профиль";
 
-            const { data, error } =
+            const {
+                data,
+                error
+            } =
                 await supabase
                     .from("profiles")
                     .upsert(
                         {
                             id: state.user.id,
-                            display_name: fallbackName
+                            display_name:
+                                fallbackName
                         },
                         {
                             onConflict: "id"
@@ -608,8 +783,14 @@
                     .single();
 
             if (error) {
-                console.error(error);
+
+                console.error(
+                    "Ошибка создания профиля:",
+                    error
+                );
+
             } else {
+
                 profile = data;
             }
         }
@@ -620,25 +801,43 @@
 
     async function loadUserData() {
 
-        state.profile = await ensureProfile();
+        state.profile =
+            await ensureProfile();
 
-        const { data: lists, error: listsError } =
+        const {
+            data: lists,
+            error: listsError
+        } =
             await supabase
                 .from("lists")
                 .select("*")
-                .eq("user_id", state.user.id)
-                .order("created_at", {
-                    ascending: true
-                });
+                .eq(
+                    "user_id",
+                    state.user.id
+                )
+                .order(
+                    "created_at",
+                    {
+                        ascending: true
+                    }
+                );
 
         if (listsError) {
-            console.error(listsError);
+
+            console.error(
+                "Ошибка списков:",
+                listsError
+            );
+
             showToast(
                 "Не удалось загрузить списки.",
                 "error"
             );
+
         } else {
-            state.lists = lists || [];
+
+            state.lists =
+                lists || [];
         }
 
         if (!state.lists.length) {
@@ -667,20 +866,34 @@
             }
         ];
 
-        const rows = defaults.map(item => ({
-            user_id: state.user.id,
-            ...item
-        }));
+        const rows =
+            defaults.map(item => ({
+                user_id:
+                    state.user.id,
+                ...item
+            }));
 
-        const { data, error } =
+        const {
+            data,
+            error
+        } =
             await supabase
                 .from("lists")
                 .insert(rows)
                 .select();
 
-        if (!error) {
-            state.lists = data || [];
+        if (error) {
+
+            console.error(
+                "Ошибка создания списков:",
+                error
+            );
+
+            return;
         }
+
+        state.lists =
+            data || [];
     }
 
 
@@ -692,19 +905,46 @@
             "Мой профиль";
 
         const email =
-            state.user.email || "Аккаунт";
+            state.user.email ||
+            "Аккаунт";
 
-        const initials = getInitials(name);
+        const initials =
+            getInitials(name);
 
-        profileName.textContent = name;
-        profileEmail.textContent = email;
-        profileAvatar.textContent = initials;
+        if (profileName) {
+            profileName.textContent =
+                name;
+        }
 
-        welcomeName.textContent = name;
+        if (profileEmail) {
+            profileEmail.textContent =
+                email;
+        }
 
-        settingsName.textContent = name;
-        settingsEmail.textContent = email;
-        settingsAvatar.textContent = initials;
+        if (profileAvatar) {
+            profileAvatar.textContent =
+                initials;
+        }
+
+        if (welcomeName) {
+            welcomeName.textContent =
+                name;
+        }
+
+        if (settingsName) {
+            settingsName.textContent =
+                name;
+        }
+
+        if (settingsEmail) {
+            settingsEmail.textContent =
+                email;
+        }
+
+        if (settingsAvatar) {
+            settingsAvatar.textContent =
+                initials;
+        }
 
         document.title =
             `Daily — ${name}`;
@@ -725,7 +965,7 @@
 
         await loadNote();
 
-        renderCalendar();
+        await renderCalendar();
 
         await loadWeekStats();
 
@@ -745,26 +985,46 @@
             return;
         }
 
-        const date = dateToISO(
-            state.selectedDate
-        );
+        const date =
+            dateToISO(
+                state.selectedDate
+            );
 
-        const { data, error } =
+        const {
+            data,
+            error
+        } =
             await supabase
                 .from("tasks")
                 .select("*")
-                .eq("user_id", state.user.id)
-                .eq("task_date", date)
-                .order("task_time", {
-                    ascending: true,
-                    nullsFirst: false
-                })
-                .order("created_at", {
-                    ascending: true
-                });
+                .eq(
+                    "user_id",
+                    state.user.id
+                )
+                .eq(
+                    "task_date",
+                    date
+                )
+                .order(
+                    "task_time",
+                    {
+                        ascending: true,
+                        nullsFirst: false
+                    }
+                )
+                .order(
+                    "created_at",
+                    {
+                        ascending: true
+                    }
+                );
 
         if (error) {
-            console.error(error);
+
+            console.error(
+                "Ошибка загрузки задач:",
+                error
+            );
 
             showToast(
                 "Не удалось загрузить задачи.",
@@ -774,39 +1034,60 @@
             return;
         }
 
-        state.tasks = data || [];
+        state.tasks =
+            data || [];
 
         renderTasks();
+
         updateProgress();
-        renderCalendar();
+
+        await renderCalendar();
     }
 
 
     async function loadAllTasks() {
 
         if (!state.user) {
-            return;
-        }
-
-        const { data, error } =
-            await supabase
-                .from("tasks")
-                .select("*")
-                .eq("user_id", state.user.id)
-                .order("task_date", {
-                    ascending: false
-                })
-                .order("task_time", {
-                    ascending: true,
-                    nullsFirst: false
-                });
-
-        if (error) {
-            console.error(error);
             return [];
         }
 
-        state.allTasks = data || [];
+        const {
+            data,
+            error
+        } =
+            await supabase
+                .from("tasks")
+                .select("*")
+                .eq(
+                    "user_id",
+                    state.user.id
+                )
+                .order(
+                    "task_date",
+                    {
+                        ascending: false
+                    }
+                )
+                .order(
+                    "task_time",
+                    {
+                        ascending: true,
+                        nullsFirst: false
+                    }
+                );
+
+        if (error) {
+
+            console.error(
+                "Ошибка загрузки всех задач:",
+                error
+            );
+
+            return [];
+        }
+
+        state.allTasks =
+            data || [];
 
         return state.allTasks;
     }
@@ -814,11 +1095,16 @@
 
     function renderTasks() {
 
+        if (!taskList) {
+            return;
+        }
+
         taskList.innerHTML = "";
 
-        taskCountBadge.textContent =
-            state.tasks.length;
-
+        if (taskCountBadge) {
+            taskCountBadge.textContent =
+                state.tasks.length;
+        }
 
         if (!state.tasks.length) {
 
@@ -833,28 +1119,35 @@
             return;
         }
 
-
         state.tasks.forEach(task => {
 
             taskList.appendChild(
                 createTaskElement(task)
             );
-
         });
     }
 
 
     function createTaskElement(task) {
 
-        const label =
+        const element =
             document.createElement("div");
 
-        label.className =
-            `task ${task.completed ? "completed" : ""}`;
+        element.className =
+            `task ${
+                task.completed
+                    ? "completed"
+                    : ""
+            }`;
+
+        element.dataset.taskId =
+            task.id;
 
         const list =
             state.lists.find(
-                item => item.id === task.list_id
+                item =>
+                    item.id ===
+                    task.list_id
             );
 
         const time =
@@ -862,13 +1155,21 @@
                 ? task.task_time.slice(0, 5)
                 : "";
 
-        label.innerHTML = `
+        element.innerHTML = `
             <input
                 type="checkbox"
+                class="task-checkbox"
+                data-task-id="${escapeHTML(task.id)}"
                 ${task.completed ? "checked" : ""}
+                aria-label="Отметить задачу выполненной"
             >
 
-            <span class="custom-checkbox">
+            <span
+                class="custom-checkbox"
+                data-checkbox-for="${escapeHTML(task.id)}"
+                role="checkbox"
+                aria-checked="${task.completed ? "true" : "false"}"
+            >
                 ${task.completed ? "✓" : ""}
             </span>
 
@@ -890,12 +1191,18 @@
                 <button
                     type="button"
                     class="task-action task-favorite ${
-                        task.favorite ? "active" : ""
+                        task.favorite
+                            ? "active"
+                            : ""
                     }"
                     data-action="favorite"
                     title="Избранное"
                 >
-                    ${task.favorite ? "★" : "☆"}
+                    ${
+                        task.favorite
+                            ? "★"
+                            : "☆"
+                    }
                 </button>
 
                 <button
@@ -921,22 +1228,66 @@
 
 
         const checkbox =
-            label.querySelector("input");
+            element.querySelector(
+                ".task-checkbox"
+            );
+
 
         checkbox.addEventListener(
             "change",
-            async () => {
+            async (event) => {
+
+                event.stopPropagation();
+
+                if (
+                    state.updatingTasks.has(
+                        task.id
+                    )
+                ) {
+                    return;
+                }
 
                 await toggleTask(
                     task.id,
                     checkbox.checked
                 );
-
             }
         );
 
 
-        label.addEventListener(
+        const customCheckbox =
+            element.querySelector(
+                ".custom-checkbox"
+            );
+
+
+        customCheckbox.addEventListener(
+            "click",
+            async event => {
+
+                event.preventDefault();
+                event.stopPropagation();
+
+                if (
+                    state.updatingTasks.has(
+                        task.id
+                    )
+                ) {
+                    return;
+                }
+
+                const newValue =
+                    !task.completed;
+
+                await toggleTask(
+                    task.id,
+                    newValue
+                );
+            }
+        );
+
+
+        element.addEventListener(
             "click",
             event => {
 
@@ -950,92 +1301,266 @@
                 }
 
                 event.preventDefault();
+                event.stopPropagation();
 
                 const actionType =
                     action.dataset.action;
 
-                if (actionType === "favorite") {
+                if (
+                    actionType ===
+                    "favorite"
+                ) {
                     toggleFavorite(task);
                 }
 
-                if (actionType === "edit") {
+                if (
+                    actionType ===
+                    "edit"
+                ) {
                     openEditTask(task);
                 }
 
-                if (actionType === "delete") {
+                if (
+                    actionType ===
+                    "delete"
+                ) {
                     deleteTask(task.id);
                 }
             }
         );
 
 
-        return label;
+        return element;
     }
 
 
-    async function toggleTask(id, completed) {
+    /* =====================================================
+       TOGGLE TASK — FIXED
+    ===================================================== */
 
-        const { error } =
-            await supabase
-                .from("tasks")
-                .update({
-                    completed
-                })
-                .eq("id", id)
-                .eq("user_id", state.user.id);
+    async function toggleTask(
+        id,
+        completed
+    ) {
 
-        if (error) {
+        if (!state.user) {
+            return;
+        }
 
-            console.error(error);
-
-            showToast(
-                "Не удалось обновить задачу.",
-                "error"
-            );
-
+        if (
+            state.updatingTasks.has(id)
+        ) {
             return;
         }
 
         const task =
             state.tasks.find(
-                item => item.id === id
+                item =>
+                    item.id === id
             );
 
+        const previousValue =
+            task
+                ? Boolean(task.completed)
+                : !completed;
+
+
+        state.updatingTasks.add(id);
+
+
+        /*
+           Сразу обновляем интерфейс,
+           чтобы пользователь видел реакцию.
+        */
+
         if (task) {
-            task.completed = completed;
+            task.completed =
+                completed;
         }
 
         renderTasks();
-
         updateProgress();
 
-        await loadWeekStats();
 
-        renderCalendar();
+        try {
 
-        if (
-            state.activeView === "favorites"
-        ) {
-            await renderFavorites();
+            const {
+                data,
+                error
+            } =
+                await supabase
+                    .from("tasks")
+                    .update({
+                        completed:
+                            Boolean(completed)
+                    })
+                    .eq(
+                        "id",
+                        id
+                    )
+                    .eq(
+                        "user_id",
+                        state.user.id
+                    )
+                    .select("id,completed");
+
+
+            if (error) {
+                throw error;
+            }
+
+
+            /*
+               Очень важно:
+               .select() позволяет убедиться,
+               что строка реально обновилась.
+            */
+
+            if (
+                !data ||
+                data.length === 0
+            ) {
+
+                throw new Error(
+                    "Supabase не обновил задачу. Проверь RLS policy для UPDATE таблицы tasks."
+                );
+            }
+
+
+            const updatedTask =
+                data[0];
+
+
+            if (task) {
+
+                task.completed =
+                    Boolean(
+                        updatedTask.completed
+                    );
+            }
+
+
+            renderTasks();
+
+            updateProgress();
+
+            await loadWeekStats();
+
+            await renderCalendar();
+
+
+            if (
+                state.activeView ===
+                "favorites"
+            ) {
+                await renderFavorites();
+            }
+
+
+        } catch (error) {
+
+            console.error(
+                "Ошибка изменения completed:",
+                error
+            );
+
+
+            /*
+               Возвращаем старое состояние,
+               если база отклонила изменение.
+            */
+
+            if (task) {
+                task.completed =
+                    previousValue;
+            }
+
+            renderTasks();
+
+            updateProgress();
+
+
+            let message =
+                "Не удалось обновить задачу.";
+
+            const errorText =
+                String(
+                    error?.message || ""
+                );
+
+
+            if (
+                errorText.includes(
+                    "RLS"
+                ) ||
+                errorText.includes(
+                    "row-level security"
+                ) ||
+                errorText.includes(
+                    "не обновил задачу"
+                )
+            ) {
+                message =
+                    "База данных не разрешила изменить задачу. Нужно проверить RLS для tasks.";
+            }
+
+
+            showToast(
+                message,
+                "error"
+            );
+
+        } finally {
+
+            state.updatingTasks.delete(id);
         }
     }
 
 
+    /* =====================================================
+       FAVORITE
+    ===================================================== */
+
     async function toggleFavorite(task) {
 
-        const nextValue =
-            !task.favorite;
+        if (!state.user) {
+            return;
+        }
 
-        const { error } =
+        const nextValue =
+            !Boolean(task.favorite);
+
+        const {
+            data,
+            error
+        } =
             await supabase
                 .from("tasks")
                 .update({
-                    favorite: nextValue
+                    favorite:
+                        nextValue
                 })
-                .eq("id", task.id)
-                .eq("user_id", state.user.id);
+                .eq(
+                    "id",
+                    task.id
+                )
+                .eq(
+                    "user_id",
+                    state.user.id
+                )
+                .select("id,favorite");
 
-        if (error) {
+
+        if (
+            error ||
+            !data ||
+            !data.length
+        ) {
+
+            console.error(
+                "Ошибка избранного:",
+                error
+            );
 
             showToast(
                 "Не удалось изменить избранное.",
@@ -1045,23 +1570,35 @@
             return;
         }
 
-        task.favorite = nextValue;
+
+        task.favorite =
+            Boolean(
+                data[0].favorite
+            );
+
 
         renderTasks();
 
+
         if (
-            state.activeView === "favorites"
+            state.activeView ===
+            "favorites"
         ) {
             await renderFavorites();
         }
     }
 
 
+    /* =====================================================
+       DELETE TASK
+    ===================================================== */
+
     async function deleteTask(id) {
 
         const task =
             state.tasks.find(
-                item => item.id === id
+                item =>
+                    item.id === id
             );
 
         if (!task) {
@@ -1077,16 +1614,31 @@
             return;
         }
 
-        const { error } =
+
+        const {
+            data,
+            error
+        } =
             await supabase
                 .from("tasks")
                 .delete()
-                .eq("id", id)
-                .eq("user_id", state.user.id);
+                .eq(
+                    "id",
+                    id
+                )
+                .eq(
+                    "user_id",
+                    state.user.id
+                )
+                .select("id");
+
 
         if (error) {
 
-            console.error(error);
+            console.error(
+                "Ошибка удаления:",
+                error
+            );
 
             showToast(
                 "Не удалось удалить задачу.",
@@ -1096,10 +1648,27 @@
             return;
         }
 
+
+        if (
+            !data ||
+            !data.length
+        ) {
+
+            showToast(
+                "Задача не была удалена. Проверь права доступа.",
+                "error"
+            );
+
+            return;
+        }
+
+
         state.tasks =
             state.tasks.filter(
-                item => item.id !== id
+                item =>
+                    item.id !== id
             );
+
 
         renderTasks();
 
@@ -1107,7 +1676,8 @@
 
         await loadWeekStats();
 
-        renderCalendar();
+        await renderCalendar();
+
 
         showToast(
             "Задача удалена."
@@ -1126,22 +1696,31 @@
         state.lists.forEach(list => {
 
             const option =
-                document.createElement("option");
+                document.createElement(
+                    "option"
+                );
 
-            option.value = list.id;
+            option.value =
+                list.id;
 
-            option.textContent = list.name;
+            option.textContent =
+                list.name;
 
-            taskCategory.appendChild(option);
+            taskCategory.appendChild(
+                option
+            );
         });
 
 
         if (
             state.selectedListId &&
             state.lists.some(
-                item => item.id === state.selectedListId
+                item =>
+                    item.id ===
+                    state.selectedListId
             )
         ) {
+
             taskCategory.value =
                 state.selectedListId;
         }
@@ -1150,9 +1729,11 @@
 
     function openNewTask() {
 
-        state.editingTaskId = null;
+        state.editingTaskId =
+            null;
 
-        editingTaskId.value = "";
+        editingTaskId.value =
+            "";
 
         taskModalTitle.textContent =
             "Новая задача";
@@ -1160,30 +1741,40 @@
         taskModalSubtitle.textContent =
             "Добавьте задачу в свой план.";
 
-        taskName.value = "";
+        taskName.value =
+            "";
 
-        taskTime.value = "12:00";
+        taskTime.value =
+            "12:00";
 
         renderTaskCategory();
 
+
         if (state.selectedListId) {
+
             taskCategory.value =
                 state.selectedListId;
         }
 
+
         openModal(taskModal);
 
+
         setTimeout(() => {
+
             taskName.focus();
+
         }, 50);
     }
 
 
     function openEditTask(task) {
 
-        state.editingTaskId = task.id;
+        state.editingTaskId =
+            task.id;
 
-        editingTaskId.value = task.id;
+        editingTaskId.value =
+            task.id;
 
         taskModalTitle.textContent =
             "Редактировать задачу";
@@ -1199,22 +1790,31 @@
                 ? task.task_time.slice(0, 5)
                 : "12:00";
 
+
         renderTaskCategory();
 
+
         if (task.list_id) {
+
             taskCategory.value =
                 task.list_id;
         }
 
+
         openModal(taskModal);
 
+
         setTimeout(() => {
+
             taskName.focus();
+
         }, 50);
     }
 
 
-    async function handleTaskSubmit(event) {
+    async function handleTaskSubmit(
+        event
+    ) {
 
         event.preventDefault();
 
@@ -1227,7 +1827,9 @@
         const listId =
             taskCategory.value || null;
 
+
         if (!title) {
+
             showToast(
                 "Введите название задачи.",
                 "error"
@@ -1239,13 +1841,18 @@
 
         if (state.editingTaskId) {
 
-            const { error } =
+            const {
+                data,
+                error
+            } =
                 await supabase
                     .from("tasks")
                     .update({
                         title,
-                        task_time: time,
-                        list_id: listId
+                        task_time:
+                            time,
+                        list_id:
+                            listId
                     })
                     .eq(
                         "id",
@@ -1254,11 +1861,20 @@
                     .eq(
                         "user_id",
                         state.user.id
-                    );
+                    )
+                    .select();
 
-            if (error) {
 
-                console.error(error);
+            if (
+                error ||
+                !data ||
+                !data.length
+            ) {
+
+                console.error(
+                    "Ошибка изменения задачи:",
+                    error
+                );
 
                 showToast(
                     "Не удалось изменить задачу.",
@@ -1268,31 +1884,49 @@
                 return;
             }
 
+
             showToast(
                 "Задача обновлена."
             );
 
         } else {
 
-            const { error } =
+            const {
+                data,
+                error
+            } =
                 await supabase
                     .from("tasks")
                     .insert({
-                        user_id: state.user.id,
+                        user_id:
+                            state.user.id,
                         title,
                         task_date:
                             dateToISO(
                                 state.selectedDate
                             ),
-                        task_time: time,
-                        list_id: listId,
-                        completed: false,
-                        favorite: false
-                    });
+                        task_time:
+                            time,
+                        list_id:
+                            listId,
+                        completed:
+                            false,
+                        favorite:
+                            false
+                    })
+                    .select();
 
-            if (error) {
 
-                console.error(error);
+            if (
+                error ||
+                !data ||
+                !data.length
+            ) {
+
+                console.error(
+                    "Ошибка создания задачи:",
+                    error
+                );
 
                 showToast(
                     "Не удалось создать задачу.",
@@ -1301,6 +1935,7 @@
 
                 return;
             }
+
 
             showToast(
                 "Задача добавлена."
@@ -1312,7 +1947,8 @@
 
         taskForm.reset();
 
-        state.editingTaskId = null;
+        state.editingTaskId =
+            null;
 
         await loadTasksForSelectedDate();
 
@@ -1331,13 +1967,17 @@
         state.lists.forEach(list => {
 
             const item =
-                document.createElement("button");
+                document.createElement(
+                    "button"
+                );
 
-            item.type = "button";
+            item.type =
+                "button";
 
             item.className =
                 `list-item ${
-                    state.selectedListId === list.id
+                    state.selectedListId ===
+                    list.id
                         ? "active"
                         : ""
                 }`;
@@ -1353,16 +1993,19 @@
                 </span>
             `;
 
+
             item.addEventListener(
                 "click",
                 async () => {
 
                     state.selectedListId =
-                        state.selectedListId === list.id
+                        state.selectedListId ===
+                        list.id
                             ? null
                             : list.id;
 
-                    state.activeView = "today";
+                    state.activeView =
+                        "today";
 
                     renderLists();
 
@@ -1374,7 +2017,10 @@
                 }
             );
 
-            listsContainer.appendChild(item);
+
+            listsContainer.appendChild(
+                item
+            );
         });
     }
 
@@ -1386,8 +2032,11 @@
         state.selectedColor =
             "#6C63FF";
 
+
         document
-            .querySelectorAll(".color-option")
+            .querySelectorAll(
+                ".color-option"
+            )
             .forEach(button => {
 
                 button.classList.toggle(
@@ -1397,15 +2046,21 @@
                 );
             });
 
+
         openModal(listModal);
 
+
         setTimeout(() => {
+
             listName.focus();
+
         }, 50);
     }
 
 
-    async function handleListSubmit(event) {
+    async function handleListSubmit(
+        event
+    ) {
 
         event.preventDefault();
 
@@ -1416,11 +2071,16 @@
             return;
         }
 
-        const { data, error } =
+
+        const {
+            data,
+            error
+        } =
             await supabase
                 .from("lists")
                 .insert({
-                    user_id: state.user.id,
+                    user_id:
+                        state.user.id,
                     name,
                     slug:
                         name
@@ -1433,23 +2093,29 @@
                                 /^-|-$/g,
                                 ""
                             ),
-                    color: state.selectedColor
+                    color:
+                        state.selectedColor
                 })
                 .select()
                 .single();
+
 
         if (error) {
 
             console.error(error);
 
             if (
-                error.code === "23505"
+                error.code ===
+                "23505"
             ) {
+
                 showToast(
                     "Такой список уже существует.",
                     "error"
                 );
+
             } else {
+
                 showToast(
                     "Не удалось создать список.",
                     "error"
@@ -1458,6 +2124,7 @@
 
             return;
         }
+
 
         state.lists.push(data);
 
@@ -1488,21 +2155,37 @@
                 state.selectedDate
             );
 
-        const { data, error } =
+
+        const {
+            data,
+            error
+        } =
             await supabase
                 .from("notes")
                 .select("*")
-                .eq("user_id", state.user.id)
-                .eq("note_date", date)
+                .eq(
+                    "user_id",
+                    state.user.id
+                )
+                .eq(
+                    "note_date",
+                    date
+                )
                 .maybeSingle();
 
+
         if (error) {
-            console.error(error);
+
+            console.error(
+                "Ошибка загрузки заметки:",
+                error
+            );
 
             noteInput.value = "";
 
             return;
         }
+
 
         noteInput.value =
             data?.content || "";
@@ -1516,6 +2199,10 @@
 
     async function saveNote() {
 
+        if (!state.user) {
+            return;
+        }
+
         const content =
             noteInput.value;
 
@@ -1524,18 +2211,29 @@
                 state.selectedDate
             );
 
+
         if (!content.trim()) {
 
-            const { error } =
+            const {
+                error
+            } =
                 await supabase
                     .from("notes")
                     .delete()
-                    .eq("user_id", state.user.id)
-                    .eq("note_date", date);
+                    .eq(
+                        "user_id",
+                        state.user.id
+                    )
+                    .eq(
+                        "note_date",
+                        date
+                    );
+
 
             if (error) {
                 console.error(error);
             }
+
 
             noteStatus.textContent =
                 "Заметка очищена";
@@ -1544,13 +2242,17 @@
         }
 
 
-        const { error } =
+        const {
+            error
+        } =
             await supabase
                 .from("notes")
                 .upsert(
                     {
-                        user_id: state.user.id,
-                        note_date: date,
+                        user_id:
+                            state.user.id,
+                        note_date:
+                            date,
                         content
                     },
                     {
@@ -1558,6 +2260,7 @@
                             "user_id,note_date"
                     }
                 );
+
 
         if (error) {
 
@@ -1573,6 +2276,7 @@
 
             return;
         }
+
 
         noteStatus.textContent =
             "Сохранено только что";
@@ -1590,24 +2294,40 @@
 
         const completed =
             state.tasks.filter(
-                task => task.completed
+                task =>
+                    Boolean(task.completed)
             ).length;
+
 
         const percent =
             total === 0
                 ? 0
                 : Math.round(
-                    completed / total * 100
+                    completed /
+                    total *
+                    100
                 );
 
-        progressPercent.textContent =
-            `${percent}%`;
 
-        progressValue.style.width =
-            `${percent}%`;
+        if (progressPercent) {
 
-        progressText.textContent =
-            `${completed} из ${total} задач выполнено`;
+            progressPercent.textContent =
+                `${percent}%`;
+        }
+
+
+        if (progressValue) {
+
+            progressValue.style.width =
+                `${percent}%`;
+        }
+
+
+        if (progressText) {
+
+            progressText.textContent =
+                `${completed} из ${total} задач выполнено`;
+        }
     }
 
 
@@ -1617,36 +2337,78 @@
 
     async function loadMonthTasks() {
 
-        const year =
-            state.calendarMonth.getFullYear();
-
-        const month =
-            state.calendarMonth.getMonth();
-
-        const firstDay =
-            new Date(year, month, 1);
-
-        const lastDay =
-            new Date(year, month + 1, 0);
-
-        const from =
-            dateToISO(firstDay);
-
-        const to =
-            dateToISO(lastDay);
-
-        const { data, error } =
-            await supabase
-                .from("tasks")
-                .select("id,task_date,completed")
-                .eq("user_id", state.user.id)
-                .gte("task_date", from)
-                .lte("task_date", to);
-
-        if (error) {
-            console.error(error);
+        if (!state.user) {
             return [];
         }
+
+        const year =
+            state.calendarMonth
+                .getFullYear();
+
+        const month =
+            state.calendarMonth
+                .getMonth();
+
+
+        const firstDay =
+            new Date(
+                year,
+                month,
+                1
+            );
+
+        const lastDay =
+            new Date(
+                year,
+                month + 1,
+                0
+            );
+
+
+        const from =
+            dateToISO(
+                firstDay
+            );
+
+        const to =
+            dateToISO(
+                lastDay
+            );
+
+
+        const {
+            data,
+            error
+        } =
+            await supabase
+                .from("tasks")
+                .select(
+                    "id,task_date,completed"
+                )
+                .eq(
+                    "user_id",
+                    state.user.id
+                )
+                .gte(
+                    "task_date",
+                    from
+                )
+                .lte(
+                    "task_date",
+                    to
+                );
+
+
+        if (error) {
+
+            console.error(
+                "Ошибка календаря:",
+                error
+            );
+
+            return [];
+        }
+
 
         return data || [];
     }
@@ -1658,22 +2420,34 @@
             return;
         }
 
+        if (
+            !calendarDays ||
+            !calendarTitle
+        ) {
+            return;
+        }
+
+
         const monthTasks =
             await loadMonthTasks();
+
 
         const taskDates =
             new Set(
                 monthTasks.map(
-                    task => task.task_date
+                    task =>
+                        task.task_date
                 )
             );
 
 
         const year =
-            state.calendarMonth.getFullYear();
+            state.calendarMonth
+                .getFullYear();
 
         const month =
-            state.calendarMonth.getMonth();
+            state.calendarMonth
+                .getMonth();
 
 
         calendarTitle.textContent =
@@ -1687,17 +2461,28 @@
                 .format(
                     state.calendarMonth
                 )
-                .replace(/^./, char => char.toUpperCase());
+                .replace(
+                    /^./,
+                    char =>
+                        char.toUpperCase()
+                );
 
 
-        calendarDays.innerHTML = "";
+        calendarDays.innerHTML =
+            "";
 
 
         const firstDay =
-            new Date(year, month, 1);
+            new Date(
+                year,
+                month,
+                1
+            );
+
 
         let weekday =
             firstDay.getDay();
+
 
         weekday =
             weekday === 0
@@ -1723,12 +2508,18 @@
 
         const totalCells =
             Math.ceil(
-                (weekday - 1 + daysInMonth) / 7
+                (
+                    weekday -
+                    1 +
+                    daysInMonth
+                ) / 7
             ) * 7;
 
 
         const todayISO =
-            dateToISO(new Date());
+            dateToISO(
+                new Date()
+            );
 
         const selectedISO =
             dateToISO(
@@ -1747,11 +2538,18 @@
             let otherMonth = false;
 
 
-            if (index < weekday - 1) {
+            if (
+                index <
+                weekday - 1
+            ) {
 
                 dayNumber =
                     previousMonthDays -
-                    (weekday - 2 - index);
+                    (
+                        weekday -
+                        2 -
+                        index
+                    );
 
                 cellDate =
                     new Date(
@@ -1764,12 +2562,18 @@
 
             } else if (
                 index >=
-                weekday - 1 + daysInMonth
+                weekday -
+                1 +
+                daysInMonth
             ) {
 
                 dayNumber =
                     index -
-                    (weekday - 1 + daysInMonth) +
+                    (
+                        weekday -
+                        1 +
+                        daysInMonth
+                    ) +
                     1;
 
                 cellDate =
@@ -1785,7 +2589,10 @@
 
                 dayNumber =
                     index -
-                    (weekday - 1) +
+                    (
+                        weekday -
+                        1
+                    ) +
                     1;
 
                 cellDate =
@@ -1798,13 +2605,18 @@
 
 
             const iso =
-                dateToISO(cellDate);
+                dateToISO(
+                    cellDate
+                );
 
 
             const day =
-                document.createElement("button");
+                document.createElement(
+                    "button"
+                );
 
-            day.type = "button";
+            day.type =
+                "button";
 
             day.className =
                 "calendar-day";
@@ -1816,12 +2628,18 @@
                 );
             }
 
+
             if (iso === todayISO) {
-                day.classList.add("today");
+                day.classList.add(
+                    "today"
+                );
             }
 
+
             if (iso === selectedISO) {
-                day.classList.add("selected");
+                day.classList.add(
+                    "selected"
+                );
             }
 
 
@@ -1832,7 +2650,9 @@
             if (taskDates.has(iso)) {
 
                 const dot =
-                    document.createElement("span");
+                    document.createElement(
+                        "span"
+                    );
 
                 dot.className =
                     "calendar-task-dot";
@@ -1850,8 +2670,10 @@
 
                     state.calendarMonth =
                         new Date(
-                            cellDate.getFullYear(),
-                            cellDate.getMonth(),
+                            cellDate
+                                .getFullYear(),
+                            cellDate
+                                .getMonth(),
                             1
                         );
 
@@ -1874,7 +2696,9 @@
             );
 
 
-            calendarDays.appendChild(day);
+            calendarDays.appendChild(
+                day
+            );
         }
     }
 
@@ -1902,35 +2726,45 @@
                     day: "numeric",
                     month: "long"
                 }
-            ).format(
-                state.selectedDate
-            );
+            )
+                .format(
+                    state.selectedDate
+                );
 
 
-        dateLabel.textContent =
-            formatted.toUpperCase();
+        if (dateLabel) {
 
-
-        if (isToday) {
-
-            $("#tasksSubtitle").textContent =
-                "Что нужно сделать сегодня";
-
-        } else {
-
-            $("#tasksSubtitle").textContent =
-                `Задачи на ${formatDateShort(
-                    dateToISO(
-                        state.selectedDate
-                    )
-                )}`;
+            dateLabel.textContent =
+                formatted.toUpperCase();
         }
 
 
-        $("#breadcrumbSub").textContent =
-            isToday
-                ? "Мой день"
-                : formatted;
+        const tasksSubtitle =
+            $("#tasksSubtitle");
+
+        if (tasksSubtitle) {
+
+            tasksSubtitle.textContent =
+                isToday
+                    ? "Что нужно сделать сегодня"
+                    : `Задачи на ${formatDateShort(
+                        dateToISO(
+                            state.selectedDate
+                        )
+                    )}`;
+        }
+
+
+        const breadcrumbSub =
+            $("#breadcrumbSub");
+
+        if (breadcrumbSub) {
+
+            breadcrumbSub.textContent =
+                isToday
+                    ? "Мой день"
+                    : formatted;
+        }
     }
 
 
@@ -1955,13 +2789,19 @@
             );
 
 
-        const { data, error } =
+        const {
+            data,
+            error
+        } =
             await supabase
                 .from("tasks")
                 .select(
                     "id,task_date,completed"
                 )
-                .eq("user_id", state.user.id)
+                .eq(
+                    "user_id",
+                    state.user.id
+                )
                 .gte(
                     "task_date",
                     dateToISO(start)
@@ -1974,7 +2814,10 @@
 
         if (error) {
 
-            console.error(error);
+            console.error(
+                "Ошибка статистики:",
+                error
+            );
 
             return;
         }
@@ -1986,12 +2829,23 @@
 
         const completed =
             tasks.filter(
-                task => task.completed
+                task =>
+                    Boolean(
+                        task.completed
+                    )
             ).length;
 
 
-        weekCompletedCount.innerHTML =
-            `${completed}<span>задач</span>`;
+        if (weekCompletedCount) {
+
+            weekCompletedCount.innerHTML =
+                `${completed}<span>задач</span>`;
+        }
+
+
+        if (!miniChart) {
+            return;
+        }
 
 
         const dailyCounts =
@@ -2008,20 +2862,29 @@
                 new Date(start);
 
             date.setDate(
-                start.getDate() + i
+                start.getDate() +
+                i
             );
+
 
             const iso =
                 dateToISO(date);
 
+
             const count =
                 tasks.filter(
                     task =>
-                        task.task_date === iso &&
-                        task.completed
+                        task.task_date ===
+                            iso &&
+                        Boolean(
+                            task.completed
+                        )
                 ).length;
 
-            dailyCounts.push(count);
+
+            dailyCounts.push(
+                count
+            );
         }
 
 
@@ -2032,14 +2895,20 @@
             );
 
 
-        miniChart.innerHTML = "";
+        miniChart.innerHTML =
+            "";
 
 
         dailyCounts.forEach(
-            (count, index) => {
+            (
+                count,
+                index
+            ) => {
 
                 const bar =
-                    document.createElement("div");
+                    document.createElement(
+                        "div"
+                    );
 
                 bar.className =
                     "chart-bar";
@@ -2049,7 +2918,9 @@
                     Math.max(
                         8,
                         Math.round(
-                            count / max * 100
+                            count /
+                            max *
+                            100
                         )
                     );
 
@@ -2058,23 +2929,33 @@
                     `${height}%`;
 
 
+                const barDate =
+                    new Date(start);
+
+                barDate.setDate(
+                    start.getDate() +
+                    index
+                );
+
+
                 if (
                     dateToISO(
                         state.selectedDate
                     ) ===
                     dateToISO(
-                        new Date(
-                            start.getFullYear(),
-                            start.getMonth(),
-                            start.getDate() + index
-                        )
+                        barDate
                     )
                 ) {
-                    bar.classList.add("active");
+
+                    bar.classList.add(
+                        "active"
+                    );
                 }
 
 
-                miniChart.appendChild(bar);
+                miniChart.appendChild(
+                    bar
+                );
             }
         );
     }
@@ -2086,21 +2967,42 @@
 
     async function renderFavorites() {
 
-        favoritesList.innerHTML = "";
+        if (!favoritesList) {
+            return;
+        }
 
-        const { data, error } =
+        favoritesList.innerHTML =
+            "";
+
+
+        const {
+            data,
+            error
+        } =
             await supabase
                 .from("tasks")
                 .select("*")
-                .eq("user_id", state.user.id)
-                .eq("favorite", true)
-                .order("task_date", {
-                    ascending: false
-                })
-                .order("task_time", {
-                    ascending: true,
-                    nullsFirst: false
-                });
+                .eq(
+                    "user_id",
+                    state.user.id
+                )
+                .eq(
+                    "favorite",
+                    true
+                )
+                .order(
+                    "task_date",
+                    {
+                        ascending: false
+                    }
+                )
+                .order(
+                    "task_time",
+                    {
+                        ascending: true,
+                        nullsFirst: false
+                    }
+                );
 
 
         if (error) {
@@ -2135,21 +3037,34 @@
 
         data.forEach(task => {
 
-            const element =
-                createFavoriteTaskElement(task);
-
-            favoritesList.appendChild(element);
+            favoritesList.appendChild(
+                createFavoriteTaskElement(
+                    task
+                )
+            );
         });
     }
 
 
-    function createFavoriteTaskElement(task) {
+    function createFavoriteTaskElement(
+        task
+    ) {
 
         const item =
-            document.createElement("div");
+            document.createElement(
+                "div"
+            );
 
         item.className =
-            `task ${task.completed ? "completed" : ""}`;
+            `task ${
+                task.completed
+                    ? "completed"
+                    : ""
+            }`;
+
+
+        item.dataset.taskId =
+            task.id;
 
 
         const time =
@@ -2161,10 +3076,16 @@
         item.innerHTML = `
             <input
                 type="checkbox"
+                class="task-checkbox"
                 ${task.completed ? "checked" : ""}
+                aria-label="Отметить задачу выполненной"
             >
 
-            <span class="custom-checkbox">
+            <span
+                class="custom-checkbox"
+                role="checkbox"
+                aria-checked="${task.completed ? "true" : "false"}"
+            >
                 ${task.completed ? "✓" : ""}
             </span>
 
@@ -2173,34 +3094,106 @@
             </span>
 
             <span class="task-time">
-                ${escapeHTML(formatDateShort(task.task_date))}
-                ${time ? " · " + escapeHTML(time) : ""}
+                ${escapeHTML(
+                    formatDateShort(
+                        task.task_date
+                    )
+                )}
+                ${
+                    time
+                        ? " · " +
+                          escapeHTML(time)
+                        : ""
+                }
             </span>
 
             <div class="task-actions">
+
                 <button
                     type="button"
                     class="task-action task-favorite active"
+                    title="Убрать из избранного"
                 >
                     ★
                 </button>
+
             </div>
         `;
 
 
         const checkbox =
-            item.querySelector("input");
+            item.querySelector(
+                ".task-checkbox"
+            );
 
-        checkbox.addEventListener(
-            "change",
-            async () => {
 
-                const { error } =
+        const customCheckbox =
+            item.querySelector(
+                ".custom-checkbox"
+            );
+
+
+        async function updateFavoriteTask(
+            completed
+        ) {
+
+            if (
+                state.updatingTasks.has(
+                    task.id
+                )
+            ) {
+                return;
+            }
+
+
+            state.updatingTasks.add(
+                task.id
+            );
+
+
+            const previous =
+                Boolean(
+                    task.completed
+                );
+
+
+            task.completed =
+                completed;
+
+
+            item.classList.toggle(
+                "completed",
+                completed
+            );
+
+
+            customCheckbox.textContent =
+                completed
+                    ? "✓"
+                    : "";
+
+
+            customCheckbox.setAttribute(
+                "aria-checked",
+                completed
+                    ? "true"
+                    : "false"
+            );
+
+
+            try {
+
+                const {
+                    data,
+                    error
+                } =
                     await supabase
                         .from("tasks")
                         .update({
                             completed:
-                                checkbox.checked
+                                Boolean(
+                                    completed
+                                )
                         })
                         .eq(
                             "id",
@@ -2209,26 +3202,104 @@
                         .eq(
                             "user_id",
                             state.user.id
+                        )
+                        .select(
+                            "id,completed"
                         );
 
-                if (error) {
-                    showToast(
-                        "Не удалось обновить задачу.",
-                        "error"
-                    );
 
-                    return;
+                if (error) {
+                    throw error;
                 }
 
+
+                if (
+                    !data ||
+                    !data.length
+                ) {
+                    throw new Error(
+                        "Задача не была обновлена."
+                    );
+                }
+
+
                 task.completed =
-                    checkbox.checked;
+                    Boolean(
+                        data[0].completed
+                    );
+
+
+                checkbox.checked =
+                    task.completed;
+
+
+                await loadWeekStats();
+
+                await renderCalendar();
+
+
+            } catch (error) {
+
+                console.error(
+                    "Ошибка изменения избранной задачи:",
+                    error
+                );
+
+
+                task.completed =
+                    previous;
+
+                checkbox.checked =
+                    previous;
 
                 item.classList.toggle(
                     "completed",
-                    checkbox.checked
+                    previous
                 );
 
-                await loadWeekStats();
+                customCheckbox.textContent =
+                    previous
+                        ? "✓"
+                        : "";
+
+
+                showToast(
+                    "Не удалось обновить задачу.",
+                    "error"
+                );
+
+            } finally {
+
+                state.updatingTasks.delete(
+                    task.id
+                );
+            }
+        }
+
+
+        checkbox.addEventListener(
+            "change",
+            async event => {
+
+                event.stopPropagation();
+
+                await updateFavoriteTask(
+                    checkbox.checked
+                );
+            }
+        );
+
+
+        customCheckbox.addEventListener(
+            "click",
+            async event => {
+
+                event.preventDefault();
+                event.stopPropagation();
+
+                await updateFavoriteTask(
+                    !task.completed
+                );
             }
         );
 
@@ -2237,13 +3308,20 @@
             ".task-favorite"
         ).addEventListener(
             "click",
-            async () => {
+            async event => {
 
-                const { error } =
+                event.preventDefault();
+                event.stopPropagation();
+
+
+                const {
+                    error
+                } =
                     await supabase
                         .from("tasks")
                         .update({
-                            favorite: false
+                            favorite:
+                                false
                         })
                         .eq(
                             "id",
@@ -2252,18 +3330,36 @@
                         .eq(
                             "user_id",
                             state.user.id
-                        );
+                        )
+                        .select("id");
 
-                if (!error) {
-                    await renderFavorites();
 
-                    if (
-                        dateToISO(
-                            state.selectedDate
-                        ) === task.task_date
-                    ) {
-                        await loadTasksForSelectedDate();
-                    }
+                if (error) {
+
+                    console.error(
+                        error
+                    );
+
+                    showToast(
+                        "Не удалось изменить избранное.",
+                        "error"
+                    );
+
+                    return;
+                }
+
+
+                await renderFavorites();
+
+
+                if (
+                    dateToISO(
+                        state.selectedDate
+                    ) ===
+                    task.task_date
+                ) {
+
+                    await loadTasksForSelectedDate();
                 }
             }
         );
@@ -2278,6 +3374,10 @@
     ===================================================== */
 
     async function renderAllTasks() {
+
+        if (!allTasksList) {
+            return;
+        }
 
         allTasksList.innerHTML = `
             <div class="empty-state">
@@ -2300,12 +3400,15 @@
             state.selectedListId
                 ? tasks.filter(
                     task =>
-                        task.task_date === selectedDate &&
-                        task.list_id === state.selectedListId
+                        task.task_date ===
+                            selectedDate &&
+                        task.list_id ===
+                            state.selectedListId
                 )
                 : tasks.filter(
                     task =>
-                        task.task_date === selectedDate
+                        task.task_date ===
+                        selectedDate
                 );
 
 
@@ -2336,7 +3439,9 @@
        SEARCH
     ===================================================== */
 
-    async function performSearch(query) {
+    async function performSearch(
+        query
+    ) {
 
         const clean =
             query.trim();
@@ -2361,20 +3466,29 @@
         `;
 
 
-        const { data, error } =
+        const {
+            data,
+            error
+        } =
             await supabase
                 .from("tasks")
                 .select(
                     "id,title,task_date,task_time,completed"
                 )
-                .eq("user_id", state.user.id)
+                .eq(
+                    "user_id",
+                    state.user.id
+                )
                 .ilike(
                     "title",
                     `%${clean}%`
                 )
-                .order("task_date", {
-                    ascending: false
-                })
+                .order(
+                    "task_date",
+                    {
+                        ascending: false
+                    }
+                )
                 .limit(30);
 
 
@@ -2404,13 +3518,16 @@
         }
 
 
-        searchResults.innerHTML = "";
+        searchResults.innerHTML =
+            "";
 
 
         data.forEach(task => {
 
             const result =
-                document.createElement("div");
+                document.createElement(
+                    "div"
+                );
 
             result.className =
                 "search-result";
@@ -2418,7 +3535,11 @@
 
             result.innerHTML = `
                 <div class="search-result-icon">
-                    ${task.completed ? "✓" : "○"}
+                    ${
+                        task.completed
+                            ? "✓"
+                            : "○"
+                    }
                 </div>
 
                 <div class="search-result-content">
@@ -2429,13 +3550,16 @@
 
                     <div class="search-result-date">
                         ${escapeHTML(
-                            formatDateShort(task.task_date)
+                            formatDateShort(
+                                task.task_date
+                            )
                         )}
                         ${
                             task.task_time
                                 ? " · " +
                                   escapeHTML(
-                                      task.task_time.slice(0, 5)
+                                      task.task_time
+                                          .slice(0, 5)
                                   )
                                 : ""
                         }
@@ -2456,15 +3580,19 @@
 
                     state.calendarMonth =
                         new Date(
-                            state.selectedDate.getFullYear(),
-                            state.selectedDate.getMonth(),
+                            state.selectedDate
+                                .getFullYear(),
+                            state.selectedDate
+                                .getMonth(),
                             1
                         );
 
                     state.activeView =
                         "today";
 
-                    closeModal(searchModal);
+                    closeModal(
+                        searchModal
+                    );
 
                     await loadTasksForSelectedDate();
 
@@ -2477,7 +3605,9 @@
             );
 
 
-            searchResults.appendChild(result);
+            searchResults.appendChild(
+                result
+            );
         });
     }
 
@@ -2489,7 +3619,9 @@
     function updateView() {
 
         document
-            .querySelectorAll(".nav-item[data-view]")
+            .querySelectorAll(
+                ".nav-item[data-view]"
+            )
             .forEach(item => {
 
                 item.classList.toggle(
@@ -2501,27 +3633,38 @@
 
 
         const showFavorites =
-            state.activeView === "favorites";
+            state.activeView ===
+            "favorites";
 
         const showTasks =
-            state.activeView === "tasks";
+            state.activeView ===
+            "tasks";
 
         const showCalendar =
-            state.activeView === "calendar";
+            state.activeView ===
+            "calendar";
 
         const showSettings =
-            state.activeView === "settings";
+            state.activeView ===
+            "settings";
 
 
-        favoritesPanel.classList.toggle(
-            "hidden",
-            !showFavorites
-        );
+        if (favoritesPanel) {
 
-        allTasksPanel.classList.toggle(
-            "hidden",
-            !showTasks
-        );
+            favoritesPanel.classList.toggle(
+                "hidden",
+                !showFavorites
+            );
+        }
+
+
+        if (allTasksPanel) {
+
+            allTasksPanel.classList.toggle(
+                "hidden",
+                !showTasks
+            );
+        }
 
 
         const dashboardGrid =
@@ -2535,11 +3678,14 @@
             showFavorites ||
             showTasks
         ) {
-            dashboardGrid.classList.add(
+
+            dashboardGrid?.classList.add(
                 "hidden"
             );
+
         } else {
-            dashboardGrid.classList.remove(
+
+            dashboardGrid?.classList.remove(
                 "hidden"
             );
         }
@@ -2549,11 +3695,14 @@
             showFavorites ||
             showTasks
         ) {
-            welcome.classList.add(
+
+            welcome?.classList.add(
                 "hidden"
             );
+
         } else {
-            welcome.classList.remove(
+
+            welcome?.classList.remove(
                 "hidden"
             );
         }
@@ -2561,13 +3710,14 @@
 
         if (showCalendar) {
 
-            dashboardGrid.classList.remove(
+            dashboardGrid?.classList.remove(
                 "hidden"
             );
 
-            welcome.classList.remove(
+            welcome?.classList.remove(
                 "hidden"
             );
+
 
             setTimeout(() => {
 
@@ -2583,7 +3733,9 @@
 
         if (showSettings) {
 
-            openModal(settingsModal);
+            openModal(
+                settingsModal
+            );
 
             state.activeView =
                 "today";
@@ -2605,30 +3757,31 @@
 
 
         if (showFavorites) {
+
             mainTitle.textContent =
                 "Избранное";
 
             $("#breadcrumbSub").textContent =
                 "Важные задачи";
-        }
 
-        else if (showTasks) {
+        } else if (showTasks) {
+
             mainTitle.textContent =
                 "Задачи";
 
             $("#breadcrumbSub").textContent =
                 "Все задачи";
-        }
 
-        else if (showCalendar) {
+        } else if (showCalendar) {
+
             mainTitle.textContent =
                 "Календарь";
 
             $("#breadcrumbSub").textContent =
                 "Ваш месяц";
-        }
 
-        else {
+        } else {
+
             mainTitle.textContent =
                 "Сегодня";
 
@@ -2641,16 +3794,20 @@
        NAVIGATION
     ===================================================== */
 
-    async function handleNavigation(view) {
+    async function handleNavigation(
+        view
+    ) {
 
         state.activeView =
             view;
 
         closeMobileSidebar();
 
+
         if (view === "today") {
 
-            state.selectedListId = null;
+            state.selectedListId =
+                null;
 
             const today =
                 new Date();
@@ -2665,12 +3822,14 @@
                     1
                 );
 
+
             renderLists();
 
             await loadTasksForSelectedDate();
 
             await loadNote();
         }
+
 
         updateView();
     }
@@ -2691,8 +3850,12 @@
             return;
         }
 
-        const { error } =
+
+        const {
+            error
+        } =
             await supabase.auth.signOut();
+
 
         if (error) {
 
@@ -2705,6 +3868,7 @@
 
             return;
         }
+
 
         closeAllModals();
 
@@ -2729,7 +3893,8 @@
         () => {
 
             setAuthMode(
-                state.authMode === "login"
+                state.authMode ===
+                    "login"
                     ? "register"
                     : "login"
             );
@@ -2745,10 +3910,12 @@
                 authPassword.type ===
                 "password";
 
+
             authPassword.type =
                 isPassword
                     ? "text"
                     : "password";
+
 
             passwordToggle.textContent =
                 isPassword
@@ -2758,34 +3925,45 @@
     );
 
 
-    $("#newTaskButton").addEventListener(
-        "click",
-        openNewTask
-    );
+    $("#newTaskButton")
+        ?.addEventListener(
+            "click",
+            openNewTask
+        );
 
 
-    $("#addTaskButton").addEventListener(
-        "click",
-        openNewTask
-    );
+    $("#addTaskButton")
+        ?.addEventListener(
+            "click",
+            openNewTask
+        );
 
 
-    $("#allTasksAddButton").addEventListener(
-        "click",
-        openNewTask
-    );
+    $("#allTasksAddButton")
+        ?.addEventListener(
+            "click",
+            openNewTask
+        );
 
 
-    $("#closeTaskModal").addEventListener(
-        "click",
-        () => closeModal(taskModal)
-    );
+    $("#closeTaskModal")
+        ?.addEventListener(
+            "click",
+            () =>
+                closeModal(
+                    taskModal
+                )
+        );
 
 
-    $("#cancelTask").addEventListener(
-        "click",
-        () => closeModal(taskModal)
-    );
+    $("#cancelTask")
+        ?.addEventListener(
+            "click",
+            () =>
+                closeModal(
+                    taskModal
+                )
+        );
 
 
     taskForm.addEventListener(
@@ -2794,22 +3972,31 @@
     );
 
 
-    $("#addListButton").addEventListener(
-        "click",
-        openNewList
-    );
+    $("#addListButton")
+        ?.addEventListener(
+            "click",
+            openNewList
+        );
 
 
-    $("#closeListModal").addEventListener(
-        "click",
-        () => closeModal(listModal)
-    );
+    $("#closeListModal")
+        ?.addEventListener(
+            "click",
+            () =>
+                closeModal(
+                    listModal
+                )
+        );
 
 
-    $("#cancelList").addEventListener(
-        "click",
-        () => closeModal(listModal)
-    );
+    $("#cancelList")
+        ?.addEventListener(
+            "click",
+            () =>
+                closeModal(
+                    listModal
+                )
+        );
 
 
     listForm.addEventListener(
@@ -2819,7 +4006,9 @@
 
 
     document
-        .querySelectorAll(".color-option")
+        .querySelectorAll(
+            ".color-option"
+        )
         .forEach(button => {
 
             button.addEventListener(
@@ -2828,6 +4017,7 @@
 
                     state.selectedColor =
                         button.dataset.color;
+
 
                     document
                         .querySelectorAll(
@@ -2845,17 +4035,18 @@
         });
 
 
-    $("#saveNoteButton").addEventListener(
-        "click",
-        async () => {
+    $("#saveNoteButton")
+        ?.addEventListener(
+            "click",
+            async () => {
 
-            await saveNote();
+                await saveNote();
 
-            showToast(
-                "Заметка сохранена."
-            );
-        }
-    );
+                showToast(
+                    "Заметка сохранена."
+                );
+            }
+        );
 
 
     noteInput.addEventListener(
@@ -2865,9 +4056,11 @@
             noteStatus.textContent =
                 "Есть несохранённые изменения";
 
+
             clearTimeout(
                 state.noteSaveTimer
             );
+
 
             state.noteSaveTimer =
                 setTimeout(
@@ -2878,95 +4071,113 @@
     );
 
 
-    $("#previousMonth").addEventListener(
-        "click",
-        async () => {
+    $("#previousMonth")
+        ?.addEventListener(
+            "click",
+            async () => {
 
-            state.calendarMonth =
-                new Date(
-                    state.calendarMonth.getFullYear(),
-                    state.calendarMonth.getMonth() - 1,
-                    1
+                state.calendarMonth =
+                    new Date(
+                        state.calendarMonth
+                            .getFullYear(),
+                        state.calendarMonth
+                            .getMonth() - 1,
+                        1
+                    );
+
+                await renderCalendar();
+            }
+        );
+
+
+    $("#nextMonth")
+        ?.addEventListener(
+            "click",
+            async () => {
+
+                state.calendarMonth =
+                    new Date(
+                        state.calendarMonth
+                            .getFullYear(),
+                        state.calendarMonth
+                            .getMonth() + 1,
+                        1
+                    );
+
+                await renderCalendar();
+            }
+        );
+
+
+    $("#todayMonth")
+        ?.addEventListener(
+            "click",
+            async () => {
+
+                const today =
+                    new Date();
+
+                state.selectedDate =
+                    today;
+
+                state.calendarMonth =
+                    new Date(
+                        today.getFullYear(),
+                        today.getMonth(),
+                        1
+                    );
+
+                state.activeView =
+                    "today";
+
+
+                await loadTasksForSelectedDate();
+
+                await loadNote();
+
+                updateDateHeader();
+
+                updateView();
+            }
+        );
+
+
+    $("#searchButton")
+        ?.addEventListener(
+            "click",
+            () => {
+
+                openModal(
+                    searchModal
                 );
 
-            await renderCalendar();
-        }
-    );
+                searchInput.value =
+                    "";
+
+                searchResults.innerHTML = `
+                    <div class="search-empty">
+                        Начните вводить запрос
+                    </div>
+                `;
 
 
-    $("#nextMonth").addEventListener(
-        "click",
-        async () => {
-
-            state.calendarMonth =
-                new Date(
-                    state.calendarMonth.getFullYear(),
-                    state.calendarMonth.getMonth() + 1,
-                    1
+                setTimeout(
+                    () =>
+                        searchInput.focus(),
+                    50
                 );
-
-            await renderCalendar();
-        }
-    );
+            }
+        );
 
 
-    $("#todayMonth").addEventListener(
-        "click",
-        async () => {
-
-            const today =
-                new Date();
-
-            state.selectedDate =
-                today;
-
-            state.calendarMonth =
-                new Date(
-                    today.getFullYear(),
-                    today.getMonth(),
-                    1
-                );
-
-            state.activeView =
-                "today";
-
-            await loadTasksForSelectedDate();
-
-            await loadNote();
-
-            updateDateHeader();
-
-            updateView();
-        }
-    );
-
-
-    $("#searchButton").addEventListener(
-        "click",
-        () => {
-
-            openModal(searchModal);
-
-            searchInput.value = "";
-
-            searchResults.innerHTML = `
-                <div class="search-empty">
-                    Начните вводить запрос
-                </div>
-            `;
-
-            setTimeout(
-                () => searchInput.focus(),
-                50
-            );
-        }
-    );
-
-
-    $("#closeSearchModal").addEventListener(
-        "click",
-        () => closeModal(searchModal)
-    );
+    $("#closeSearchModal")
+        ?.addEventListener(
+            "click",
+            () =>
+                closeModal(
+                    searchModal
+                )
+        );
 
 
     searchInput.addEventListener(
@@ -2976,6 +4187,7 @@
             clearTimeout(
                 searchInput._timer
             );
+
 
             searchInput._timer =
                 setTimeout(
@@ -2989,17 +4201,19 @@
     );
 
 
-    $("#notificationButton").addEventListener(
-        "click",
-        event => {
+    $("#notificationButton")
+        ?.addEventListener(
+            "click",
+            event => {
 
-            event.stopPropagation();
+                event.stopPropagation();
 
-            notificationPopover.classList.toggle(
-                "hidden"
-            );
-        }
-    );
+
+                notificationPopover.classList.toggle(
+                    "hidden"
+                );
+            }
+        );
 
 
     document.addEventListener(
@@ -3007,12 +4221,14 @@
         event => {
 
             if (
+                notificationPopover &&
                 !notificationPopover.contains(
                     event.target
                 ) &&
                 event.target !==
-                $("#notificationButton")
+                    $("#notificationButton")
             ) {
+
                 notificationPopover.classList.add(
                     "hidden"
                 );
@@ -3021,51 +4237,62 @@
     );
 
 
-    $("#profileButton").addEventListener(
-        "click",
-        () => {
+    $("#profileButton")
+        ?.addEventListener(
+            "click",
+            () => {
 
-            const name =
-                state.profile?.display_name ||
-                state.user?.email?.split("@")[0] ||
-                "Мой профиль";
-
-            settingsName.textContent =
-                name;
-
-            settingsEmail.textContent =
-                state.user?.email || "";
-
-            settingsAvatar.textContent =
-                getInitials(name);
-
-            openModal(settingsModal);
-        }
-    );
+                const name =
+                    state.profile?.display_name ||
+                    state.user?.email?.split("@")[0] ||
+                    "Мой профиль";
 
 
-    $("#closeSettingsModal").addEventListener(
-        "click",
-        () => {
+                settingsName.textContent =
+                    name;
 
-            closeModal(settingsModal);
+                settingsEmail.textContent =
+                    state.user?.email || "";
 
-            state.activeView =
-                "today";
-
-            updateView();
-        }
-    );
+                settingsAvatar.textContent =
+                    getInitials(name);
 
 
-    $("#logoutButton").addEventListener(
-        "click",
-        logout
-    );
+                openModal(
+                    settingsModal
+                );
+            }
+        );
+
+
+    $("#closeSettingsModal")
+        ?.addEventListener(
+            "click",
+            () => {
+
+                closeModal(
+                    settingsModal
+                );
+
+                state.activeView =
+                    "today";
+
+                updateView();
+            }
+        );
+
+
+    $("#logoutButton")
+        ?.addEventListener(
+            "click",
+            logout
+        );
 
 
     document
-        .querySelectorAll(".nav-item[data-view]")
+        .querySelectorAll(
+            ".nav-item[data-view]"
+        )
         .forEach(item => {
 
             item.addEventListener(
@@ -3080,28 +4307,30 @@
         });
 
 
-    $("#mobileMenuButton").addEventListener(
-        "click",
-        () => {
+    $("#mobileMenuButton")
+        ?.addEventListener(
+            "click",
+            () => {
 
-            sidebar.classList.add(
-                "mobile-open"
-            );
+                sidebar.classList.add(
+                    "mobile-open"
+                );
 
-            sidebarOverlay.classList.add(
-                "active"
-            );
-        }
-    );
-
-
-    $("#mobileSidebarClose").addEventListener(
-        "click",
-        closeMobileSidebar
-    );
+                sidebarOverlay.classList.add(
+                    "active"
+                );
+            }
+        );
 
 
-    sidebarOverlay.addEventListener(
+    $("#mobileSidebarClose")
+        ?.addEventListener(
+            "click",
+            closeMobileSidebar
+        );
+
+
+    sidebarOverlay?.addEventListener(
         "click",
         closeMobileSidebar
     );
@@ -3111,8 +4340,13 @@
         "keydown",
         event => {
 
-            if (event.key === "Escape") {
+            if (
+                event.key ===
+                "Escape"
+            ) {
+
                 closeAllModals();
+
                 closeMobileSidebar();
             }
         }
@@ -3124,20 +4358,26 @@
         listModal,
         searchModal,
         settingsModal
-    ].forEach(modal => {
+    ]
+        .filter(Boolean)
+        .forEach(modal => {
 
-        modal.addEventListener(
-            "click",
-            event => {
+            modal.addEventListener(
+                "click",
+                event => {
 
-                if (
-                    event.target === modal
-                ) {
-                    closeModal(modal);
+                    if (
+                        event.target ===
+                        modal
+                    ) {
+
+                        closeModal(
+                            modal
+                        );
+                    }
                 }
-            }
-        );
-    });
+            );
+        });
 
 
     /* =====================================================
@@ -3147,7 +4387,9 @@
     supabase.auth.onAuthStateChange(
         async (_event, session) => {
 
-            await handleSession(session);
+            await handleSession(
+                session
+            );
         }
     );
 
@@ -3158,7 +4400,10 @@
 
     async function init() {
 
-        setAuthMode("login");
+        setAuthMode(
+            "login"
+        );
+
 
         try {
 
@@ -3168,9 +4413,11 @@
             } =
                 await supabase.auth.getSession();
 
+
             if (error) {
                 throw error;
             }
+
 
             await handleSession(
                 data.session
@@ -3178,7 +4425,10 @@
 
         } catch (error) {
 
-            console.error(error);
+            console.error(
+                error
+            );
+
 
             loadingScreen.classList.add(
                 "hidden"
@@ -3187,6 +4437,7 @@
             authScreen.classList.remove(
                 "hidden"
             );
+
 
             showAuthMessage(
                 "Не удалось подключиться к Daily. Проверь настройки Supabase."
