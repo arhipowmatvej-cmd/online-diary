@@ -1,1 +1,480 @@
+```html
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>MyDay — онлайн ежедневник</title>
+
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+    <div class="app">
+
+        <!-- Боковая панель -->
+        <aside class="sidebar">
+
+            <div class="brand">
+                <div class="brand-icon">M</div>
+
+                <div class="brand-text">
+                    <span>MY</span>DAY
+                </div>
+            </div>
+
+            <nav class="navigation">
+
+                <a href="#" class="nav-item active">
+                    <span class="nav-icon">⌂</span>
+                    <span>Главная</span>
+                </a>
+
+                <a href="#" class="nav-item">
+                    <span class="nav-icon">▣</span>
+                    <span>Календарь</span>
+                </a>
+
+                <a href="#" class="nav-item">
+                    <span class="nav-icon">✓</span>
+                    <span>Задачи</span>
+                </a>
+
+                <a href="#" class="nav-item">
+                    <span class="nav-icon">□</span>
+                    <span>Заметки</span>
+                </a>
+
+                <a href="#" class="nav-item">
+                    <span class="nav-icon">◇</span>
+                    <span>Цели</span>
+                </a>
+
+            </nav>
+
+            <div class="sidebar-bottom">
+
+                <a href="#" class="nav-item">
+                    <span class="nav-icon">⚙</span>
+                    <span>Настройки</span>
+                </a>
+
+                <div class="profile">
+
+                    <div class="profile-avatar">
+                        М
+                    </div>
+
+                    <div class="profile-info">
+                        <strong>Мой аккаунт</strong>
+                        <span>Гость</span>
+                    </div>
+
+                    <button class="profile-more">•••</button>
+
+                </div>
+
+            </div>
+
+        </aside>
+
+
+        <!-- Основная область -->
+        <main class="main">
+
+            <!-- Верхняя панель -->
+            <header class="topbar">
+
+                <div class="mobile-brand">
+                    MYDAY
+                </div>
+
+                <div class="topbar-actions">
+
+                    <button class="icon-button" title="Уведомления">
+                        ♢
+                    </button>
+
+                    <button class="avatar-button">
+                        М
+                    </button>
+
+                </div>
+
+            </header>
+
+
+            <!-- Контент -->
+            <section class="content">
+
+                <div class="welcome">
+
+                    <div>
+                        <p class="date">
+                            СРЕДА · 2 СЕНТЯБРЯ 2026
+                        </p>
+
+                        <h1>
+                            Добрый день<span>,</span>
+                        </h1>
+
+                        <h2>
+                            что будем делать сегодня?
+                        </h2>
+                    </div>
+
+                    <button class="primary-button">
+                        <span>+</span>
+                        Добавить задачу
+                    </button>
+
+                </div>
+
+
+                <!-- Основная сетка -->
+                <div class="dashboard-grid">
+
+
+                    <!-- Задачи -->
+                    <section class="card tasks-card">
+
+                        <div class="card-header">
+
+                            <div>
+                                <span class="card-label">
+                                    ПЛАН НА СЕГОДНЯ
+                                </span>
+
+                                <h3>
+                                    Мои задачи
+                                </h3>
+                            </div>
+
+                            <button class="more-button">
+                                •••
+                            </button>
+
+                        </div>
+
+
+                        <div class="progress">
+
+                            <div class="progress-info">
+                                <span>Прогресс</span>
+                                <strong>2 из 5</strong>
+                            </div>
+
+                            <div class="progress-bar">
+                                <div class="progress-value"></div>
+                            </div>
+
+                        </div>
+
+
+                        <div class="tasks-list">
+
+                            <div class="task completed">
+
+                                <div class="check">
+                                    ✓
+                                </div>
+
+                                <div class="task-content">
+                                    <strong>
+                                        Проверить почту
+                                    </strong>
+
+                                    <span>
+                                        09:00
+                                    </span>
+                                </div>
+
+                            </div>
+
+
+                            <div class="task completed">
+
+                                <div class="check">
+                                    ✓
+                                </div>
+
+                                <div class="task-content">
+                                    <strong>
+                                        Ответить на сообщения
+                                    </strong>
+
+                                    <span>
+                                        10:00
+                                    </span>
+                                </div>
+
+                            </div>
+
+
+                            <div class="task">
+
+                                <div class="check">
+                                </div>
+
+                                <div class="task-content">
+                                    <strong>
+                                        Работа над проектом
+                                    </strong>
+
+                                    <span>
+                                        11:30
+                                    </span>
+                                </div>
+
+                            </div>
+
+
+                            <div class="task">
+
+                                <div class="check">
+                                </div>
+
+                                <div class="task-content">
+                                    <strong>
+                                        Купить продукты
+                                    </strong>
+
+                                    <span>
+                                        17:30
+                                    </span>
+                                </div>
+
+                            </div>
+
+
+                            <div class="task">
+
+                                <div class="check">
+                                </div>
+
+                                <div class="task-content">
+                                    <strong>
+                                        Тренировка
+                                    </strong>
+
+                                    <span>
+                                        19:00
+                                    </span>
+                                </div>
+
+                            </div>
+
+                        </div>
+
+
+                        <button class="add-task">
+                            <span>+</span>
+                            Добавить задачу
+                        </button>
+
+                    </section>
+
+
+
+                    <!-- Расписание -->
+                    <section class="card schedule-card">
+
+                        <div class="card-header">
+
+                            <div>
+                                <span class="card-label">
+                                    РАСПИСАНИЕ
+                                </span>
+
+                                <h3>
+                                    Сегодня
+                                </h3>
+                            </div>
+
+                            <button class="more-button">
+                                •••
+                            </button>
+
+                        </div>
+
+
+                        <div class="schedule">
+
+                            <div class="schedule-item">
+
+                                <span class="schedule-time">
+                                    09:00
+                                </span>
+
+                                <div class="schedule-line"></div>
+
+                                <div class="schedule-event">
+                                    <strong>
+                                        Начало рабочего дня
+                                    </strong>
+
+                                    <span>
+                                        Работа
+                                    </span>
+                                </div>
+
+                            </div>
+
+
+                            <div class="schedule-item">
+
+                                <span class="schedule-time">
+                                    11:30
+                                </span>
+
+                                <div class="schedule-line"></div>
+
+                                <div class="schedule-event">
+                                    <strong>
+                                        Работа над проектом
+                                    </strong>
+
+                                    <span>
+                                        Проект
+                                    </span>
+                                </div>
+
+                            </div>
+
+
+                            <div class="schedule-item">
+
+                                <span class="schedule-time">
+                                    13:00
+                                </span>
+
+                                <div class="schedule-line"></div>
+
+                                <div class="schedule-event">
+                                    <strong>
+                                        Обед
+                                    </strong>
+
+                                    <span>
+                                        Перерыв
+                                    </span>
+                                </div>
+
+                            </div>
+
+
+                            <div class="schedule-item">
+
+                                <span class="schedule-time">
+                                    15:00
+                                </span>
+
+                                <div class="schedule-line"></div>
+
+                                <div class="schedule-event">
+                                    <strong>
+                                        Важные задачи
+                                    </strong>
+
+                                    <span>
+                                        Работа
+                                    </span>
+                                </div>
+
+                            </div>
+
+
+                            <div class="schedule-item">
+
+                                <span class="schedule-time">
+                                    19:00
+                                </span>
+
+                                <div class="schedule-line"></div>
+
+                                <div class="schedule-event">
+                                    <strong>
+                                        Тренировка
+                                    </strong>
+
+                                    <span>
+                                        Личное
+                                    </span>
+                                </div>
+
+                            </div>
+
+                        </div>
+
+                    </section>
+
+
+                </div>
+
+
+                <!-- Нижняя строка -->
+                <div class="bottom-grid">
+
+
+                    <section class="card quote-card">
+
+                        <div class="quote-icon">
+                            “
+                        </div>
+
+                        <p>
+                            Большие цели достигаются маленькими
+                            действиями, которые мы совершаем каждый день.
+                        </p>
+
+                        <span>
+                            МЫСЛЬ ДНЯ
+                        </span>
+
+                    </section>
+
+
+                    <section class="card focus-card">
+
+                        <div class="focus-header">
+
+                            <div>
+                                <span class="card-label">
+                                    ФОКУС
+                                </span>
+
+                                <h3>
+                                    Главное сегодня
+                                </h3>
+                            </div>
+
+                            <div class="focus-number">
+                                01
+                            </div>
+
+                        </div>
+
+                        <p>
+                            Завершить работу над текущим проектом
+                            и не откладывать важные задачи.
+                        </p>
+
+                    </section>
+
+
+                </div>
+
+            </section>
+
+        </main>
+
+    </div>
+
+    <script src="script.js"></script>
+
+</body>
+</html>
+```
 
